@@ -18,7 +18,7 @@ to start the server on powershell
 """
 app = Flask(__name__)
 
-CORS(app, origins=["*"])
+CORS(app)
 
 @app.route("/")
 def hello_world():
