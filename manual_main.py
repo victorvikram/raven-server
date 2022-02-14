@@ -9,6 +9,7 @@ import json
 import os
 import sys
 import argparse
+from tempfile import TemporaryFile
 
 sys.path.append(os.path.join(sys.path[0],'src','dataset'))
 import src.dataset.const as const
@@ -63,12 +64,8 @@ def gen_specific(index, spec, save_dir):
     """
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    
-    np.savez(os.path.join(save_dir, "RAVEN_{}_test.npz".format(index)),
-             image=image,
-             target=target)
     """
-    return image
+    return image, target
 
 """
 dict -> Root

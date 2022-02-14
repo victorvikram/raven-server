@@ -35,10 +35,18 @@ def literal():
 @app.route("/image", methods=["POST"])
 def image():
     spec = request.get_json()
-    arr = gen_specific(0, spec, "/")
-    img = arr_to_img(arr)
+    img, tar = gen_specific(0, spec, "/")
+    img = arr_to_img(img)
 
     return serve_pil_image(img)
+
+@app.route("/file", methods=["post"])
+def file():
+    spec = request.get_json()
+    img, tar = gen_specific(0, spec, "/")
+
+    return serve_npz(img, tar)
+
 
 @app.route("/blueprint", methods=["GET"])
 def blueprint():
@@ -48,6 +56,15 @@ def blueprint():
 def initials():
     blueprint = request.get_json()
     return {"results": generate_initials(blueprint)}
+
+def serve_npz(image, target):
+    buf = BytesIO()
+    np.savez(buf,
+             image=image,
+             target=target)
+    buf.seek(0)
+    res = send_file(buf, mimetype="text/csv")
+    return res
 
 def serve_pil_image(pil_img):
     output = BytesIO()
