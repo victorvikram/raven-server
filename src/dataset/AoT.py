@@ -6,7 +6,7 @@ import copy
 import numpy as np
 from scipy.special import comb
 
-from .Attribute import Angle, Color, Number, Position, Size, Type, Uniformity
+from .Attribute import Angle, Color, Number, Position, Size, Type, Uniformity, LineColor, LineSize
 from .constraints import rule_constraint
 
 
@@ -428,7 +428,23 @@ class Entity(AoTNode):
         self.color.sample()
         self.angle = Angle(min_level=entity_constraint["Angle"][0], max_level=entity_constraint["Angle"][1])
         self.angle.sample()
-    
+        
+        if "LineColor" not in entity_constraint:
+            self.linecolor = LineColor(min_level=LINECOLOR_DEFAULT, max_level=LINECOLOR_DEFAULT)
+        else:
+            self.linecolor = LineColor(min_level=entity_constraint["LineColor"][0], max_level=entity_constraint["LineColor"][1])
+        self.linecolor.sample()
+
+        if "LineSize" not in entity_constraint:
+            self.linesize = LineSize(min_level=LINESIZE_DEFAULT, max_level=LINESIZE_DEFAULT)
+        else:
+            self.linesize = LineSize(min_level=entity_constraint["LineSize"][0], max_level=entity_constraint["LineSize"][1])
+        self.linesize.sample()
+        
+        print(entity_constraint)
+        print(self.linesize.value_level)
+        print(self.linecolor.value_level)
+
     def reset_constraint(self, attr, min_level, max_level):
         attr_name = attr.lower()
         self.entity_constraint[attr][:] = [min_level, max_level]

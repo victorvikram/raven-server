@@ -17,6 +17,7 @@ import src.dataset.build_tree as build_tree
 from src.dataset.rendering import render_panel
 from src.dataset.AoT import (Root, Structure, Component, Layout, Entity)
 from src.dataset.constraints import gen_entity_constraint, gen_layout_constraint
+from src.dataset.const import LINESIZE_DEFAULT, LINECOLOR_DEFAULT
 
 """
 None -> None
@@ -208,11 +209,24 @@ def convert_to_entity_constraint(entity_desc):
     color_index = entity_desc["color"]
     angle_index = entity_desc["angle"] + 3
 
+    if "linesize" in entity_desc:
+        linesize_index = entity_desc["linesize"] 
+    else:
+        linesize_index = LINESIZE_DEFAULT
+
+    if "linecolor" in entity_desc:
+        linecolor_index = entity_desc["linecolor"]
+    else:
+        linecolor_index = LINECOLOR_DEFAULT 
+
+
     # set them as constraints
     entity_const = gen_entity_constraint(type_min=type_index, type_max=type_index, 
                                         color_min=color_index, color_max=color_index,
                                         size_min=size_index, size_max=size_index,
-                                        angle_min=angle_index, angle_max=angle_index)
+                                        angle_min=angle_index, angle_max=angle_index,
+                                        linecolor_min=linecolor_index, linecolor_max=linecolor_index,
+                                        linesize_min=linesize_index, linesize_max=linesize_index)
     
     return entity_const
     

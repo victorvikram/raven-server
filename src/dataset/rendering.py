@@ -105,12 +105,18 @@ def render_entity(entity):
     entity_size = entity.size.get_value()
     entity_color = entity.color.get_value()
     entity_angle = entity.angle.get_value()
+    entity_linecolor = entity.linecolor.get_value()
+    entity_linesize = entity.linesize.get_value()
+
     img = np.zeros((IMAGE_SIZE, IMAGE_SIZE), np.uint8)
 
     # planar position: [x, y, w, h]
     # angular position: [x, y, w, h, x_c, y_c, omega]
     # center: (columns, rows)
+
     center = (int(entity_bbox[1] * IMAGE_SIZE), int(entity_bbox[0] * IMAGE_SIZE))
+    linecolor = 255 - entity_linecolor
+    linesize = entity_linesize
     if entity_type == "triangle":
         unit = min(entity_bbox[2], entity_bbox[3]) * IMAGE_SIZE / 2
         dl = int(unit * entity_size)
@@ -121,7 +127,7 @@ def render_entity(entity):
         pts = pts.reshape((-1, 1, 2))
         color = 255 - entity_color
         width = DEFAULT_WIDTH
-        draw_triangle(img, pts, color, width)
+        draw_triangle(img, pts, color, linesize, linecolor=linecolor)
     elif entity_type == "square":
         unit = min(entity_bbox[2], entity_bbox[3]) * IMAGE_SIZE / 2
         dl = int(unit / 2 * np.sqrt(2) * entity_size)
@@ -129,7 +135,7 @@ def render_entity(entity):
         pt2 = (center[0] + dl, center[1] + dl)
         color = 255 - entity_color
         width = DEFAULT_WIDTH
-        draw_square(img, pt1, pt2, color, width)
+        draw_square(img, pt1, pt2, color, linesize, linecolor=linecolor)
     elif entity_type == "pentagon":
         unit = min(entity_bbox[2], entity_bbox[3]) * IMAGE_SIZE / 2
         dl = int(unit * entity_size)
@@ -142,7 +148,7 @@ def render_entity(entity):
         pts = pts.reshape((-1, 1, 2))
         color = 255 - entity_color
         width = DEFAULT_WIDTH
-        draw_pentagon(img, pts, color, width)
+        draw_pentagon(img, pts, color, linesize, linecolor=linecolor)
     elif entity_type == "hexagon":
         unit = min(entity_bbox[2], entity_bbox[3]) * IMAGE_SIZE / 2
         dl = int(unit * entity_size)
@@ -156,14 +162,14 @@ def render_entity(entity):
         pts = pts.reshape((-1, 1, 2))
         color = 255 - entity_color
         width = DEFAULT_WIDTH
-        draw_hexagon(img, pts, color, width)
+        draw_hexagon(img, pts, color, linesize, linecolor=linecolor)
     elif entity_type == "circle":
         # Minus because of the way we show the image. See: render_panel's return
         color = 255 - entity_color
         unit = min(entity_bbox[2], entity_bbox[3]) * IMAGE_SIZE / 2
         radius = int(unit * entity_size)
         width = DEFAULT_WIDTH
-        draw_circle(img, center, radius, color, width)
+        draw_circle(img, center, radius, color, linesize, linecolor=linecolor)
     elif entity_type == "none":
         pass
     # angular
@@ -207,19 +213,19 @@ def layer_add(lower_layer_np, higher_layer_np):
 
 
 # Draw primitives
-def draw_triangle(img, pts, color, width):
+def draw_triangle(img, pts, color, width, linecolor=255):
     # if filled
     if color != 0:
         # fill the interior
         cv2.fillConvexPoly(img, pts, color)
         # draw the edge
-        cv2.polylines(img, [pts], True, 255, width)
+        cv2.polylines(img, [pts], True, linecolor, width)
     # if not filled
     else:
-        cv2.polylines(img, [pts], True, 255, width)
+        cv2.polylines(img, [pts], True, linecolor, width)
 
 
-def draw_square(img, pt1, pt2, color, width):
+def draw_square(img, pt1, pt2, color, width, linecolor=255):
     # if filled
     if color != 0:
         # fill the interior
@@ -232,42 +238,42 @@ def draw_square(img, pt1, pt2, color, width):
         cv2.rectangle(img, 
                       pt1,
                       pt2,
-                      255,
+                      linecolor,
                       width)
     # if not filled
     else:
         cv2.rectangle(img, 
                       pt1,
                       pt2,
-                      255,
+                      linecolor,
                       width)
 
 
-def draw_pentagon(img, pts, color, width):
+def draw_pentagon(img, pts, color, width, linecolor=255):
     # if filled
     if color != 0:
         # fill the interior
         cv2.fillConvexPoly(img, pts, color)
         # draw the edge
-        cv2.polylines(img, [pts], True, 255, width)
+        cv2.polylines(img, [pts], True, linecolor, width) 
     # if not filled
     else:
-        cv2.polylines(img, [pts], True, 255, width)
+        cv2.polylines(img, [pts], True, linecolor, width)
 
 
-def draw_hexagon(img, pts, color, width):
+def draw_hexagon(img, pts, color, width, linecolor=255):
     # if filled
     if color != 0:
         # fill the interior
         cv2.fillConvexPoly(img, pts, color)
         # draw the edge
-        cv2.polylines(img, [pts], True, 255, width)
+        cv2.polylines(img, [pts], True, linecolor, width) # CHANGED
     # if not filled
     else:
-        cv2.polylines(img, [pts], True, 255, width)
+        cv2.polylines(img, [pts], True, linecolor, width)
 
 
-def draw_circle(img, center, radius, color, width):
+def draw_circle(img, center, radius, color, width, linecolor=255):
     # if filled
     if color != 0:
         # fill the interior
@@ -280,12 +286,12 @@ def draw_circle(img, center, radius, color, width):
         cv2.circle(img,
                    center,
                    radius,
-                   255,
+                   linecolor,
                    width)
     # if not filled
     else:
         cv2.circle(img,
                    center,
                    radius,
-                   255,
+                   linecolor,
                    width)

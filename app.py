@@ -12,7 +12,7 @@ import numpy as np
 
 """
 to start the server on powershell
-> $env:FLASK_APP = "server"
+> $env:FLASK_APP = "app"
 > flask run
  * Running on http://127.0.0.1:5000/
 """

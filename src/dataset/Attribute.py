@@ -4,9 +4,9 @@
 import numpy as np
 
 from .const import (ANGLE_MAX, ANGLE_MIN, ANGLE_VALUES, COLOR_MAX, COLOR_MIN,
-                   COLOR_VALUES, NUM_MAX, NUM_MIN, NUM_VALUES, SIZE_MAX,
-                   SIZE_MIN, SIZE_VALUES, TYPE_MAX, TYPE_MIN, TYPE_VALUES,
-                   UNI_MAX, UNI_MIN, UNI_VALUES)
+                   COLOR_VALUES, LINESIZE_MIN, LINESIZE_MAX, LINESIZE_VALUES, LINECOLOR_MIN, LINECOLOR_MAX,
+                   LINECOLOR_VALUES, COLOR_MIN, COLOR_MAX, NUM_MAX, NUM_MIN, NUM_VALUES, SIZE_MAX, SIZE_MIN, 
+                   SIZE_VALUES, TYPE_MAX, TYPE_MIN, TYPE_VALUES, UNI_MAX, UNI_MIN, UNI_VALUES)
 
 
 class Attribute(object):
@@ -162,6 +162,79 @@ class Size(Attribute):
             value_level = self.value_level
         return self.values[value_level]
 
+class LineSize(Attribute):
+
+    def __init__(self, min_level=LINESIZE_MIN, max_level=LINESIZE_MAX):
+        super(LineSize, self).__init__("LineSize")
+        self.value_level = 3
+        self.values = LINESIZE_VALUES
+        self.min_level = min_level
+        self.max_level = max_level
+
+    def sample(self, min_level=LINESIZE_MIN, max_level=LINESIZE_MAX):
+        min_level = max(self.min_level, min_level)
+        max_level = min(self.max_level, max_level)
+        self.value_level = np.random.choice(list(range(min_level, max_level + 1)))   
+
+    def sample_new(self, min_level=None, max_level=None, previous_values=None):
+        if min_level is None or max_level is None:
+            values = list(range(self.min_level, self.max_level + 1))
+        else:
+            values = list(range(min_level, max_level + 1))
+        if not previous_values:
+            available = set(values) - set(self.previous_values) - set([self.value_level])
+        else:
+            available = set(values) - set(previous_values) - set([self.value_level])
+        new_idx = np.random.choice(list(available))
+        return new_idx
+
+    def get_value_level(self):
+        return self.value_level
+    
+    def set_value_level(self, value_level):
+        self.value_level = value_level
+
+    def get_value(self, value_level=None):
+        if value_level is None:
+            value_level = self.value_level
+        return self.values[value_level]
+
+class LineColor(Attribute):
+
+    def __init__(self, min_level=LINECOLOR_MIN, max_level=LINECOLOR_MAX):
+        super(LineColor, self).__init__("LineColor")
+        self.value_level = 0
+        self.values = LINECOLOR_VALUES
+        self.min_level = min_level
+        self.max_level = max_level
+
+    def sample(self, min_level=LINECOLOR_MIN, max_level=LINECOLOR_MAX):
+        min_level = max(self.min_level, min_level)
+        max_level = min(self.max_level, max_level)
+        self.value_level = np.random.choice(list(range(min_level, max_level + 1)))
+
+    def sample_new(self, min_level=None, max_level=None, previous_values=None):
+        if min_level is None or max_level is None:
+            values = list(range(self.min_level, self.max_level + 1))
+        else:
+            values = list(range(min_level, max_level + 1))
+        if not previous_values:
+            available = set(values) - set(self.previous_values) - set([self.value_level])
+        else:
+            available = set(values) - set(previous_values) - set([self.value_level])
+        new_idx = np.random.choice(list(available))
+        return new_idx
+
+    def get_value_level(self):
+        return self.value_level
+    
+    def set_value_level(self, value_level):
+        self.value_level = value_level
+
+    def get_value(self, value_level=None):
+        if value_level is None:
+            value_level = self.value_level
+        return self.values[value_level]
 
 class Color(Attribute):
 
@@ -199,7 +272,6 @@ class Color(Attribute):
         if value_level is None:
             value_level = self.value_level
         return self.values[value_level]
-
 
 class Angle(Attribute):
 

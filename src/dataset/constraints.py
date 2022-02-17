@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from .const import (ANGLE_MAX, ANGLE_MIN, COLOR_MAX, COLOR_MIN, NUM_MAX,
+from .const import (ANGLE_MAX, ANGLE_MIN, COLOR_MAX, COLOR_MIN, LINESIZE_DEFAULT, LINECOLOR_DEFAULT, NUM_MAX,
                    NUM_MIN, SIZE_MAX, SIZE_MIN, TYPE_MAX, TYPE_MIN, UNI_MAX,
                    UNI_MIN)
 
@@ -18,11 +18,16 @@ def gen_layout_constraint(pos_type, pos_list,
 def gen_entity_constraint(type_min=TYPE_MIN, type_max=TYPE_MAX, 
                           size_min=SIZE_MIN, size_max=SIZE_MAX, 
                           color_min=COLOR_MIN, color_max=COLOR_MAX,
-                          angle_min=ANGLE_MIN, angle_max=ANGLE_MAX):
+                          angle_min=ANGLE_MIN, angle_max=ANGLE_MAX,
+                          linecolor_min=LINECOLOR_DEFAULT, linecolor_max=LINECOLOR_DEFAULT,
+                          linesize_min=LINESIZE_DEFAULT, linesize_max=LINESIZE_DEFAULT):
     constraint = {"Type": [type_min, type_max],
                   "Size": [size_min, size_max],
                   "Color": [color_min, color_max],
-                  "Angle": [angle_min, angle_max]}
+                  "Angle": [angle_min, angle_max],
+                  "LineColor": [linecolor_min, linecolor_max],
+                  "LineSize": [linesize_min, linesize_max]}
+
     return constraint
 
 
