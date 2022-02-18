@@ -372,10 +372,8 @@ class Position(Attribute):
             length = len(self.values)
             assert num <= length
             self.value_idx = np.random.choice(list(range(length)), num, False)
-            print((self.value_idx))
         else:
             self.value_idx = np.array(list(range(0, num)))
-            print((self.value_idx))
     
     def sample_new(self, num, previous_values=None):
         # Here sample new relies on probability

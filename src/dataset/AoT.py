@@ -440,10 +440,7 @@ class Entity(AoTNode):
         else:
             self.linesize = LineSize(min_level=entity_constraint["LineSize"][0], max_level=entity_constraint["LineSize"][1])
         self.linesize.sample()
-        
-        print(entity_constraint)
-        print(self.linesize.value_level)
-        print(self.linecolor.value_level)
+
 
     def reset_constraint(self, attr, min_level, max_level):
         attr_name = attr.lower()

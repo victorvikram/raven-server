@@ -136,7 +136,119 @@ class TestGenerateCustom(unittest.TestCase):
         self.assertEqual(gc.eligible_values("left_right", "second_comp", "type", "consistent_union", used_vals=[3, 5]), [4, 6, 7])
         self.assertEqual(gc.eligible_values("up_down", "first_comp", "size", "consistent_union", used_vals=[1]), [0, 2, 3, 4, 5])
 
+        self.assertEqual(gc.eligible_values("up_down", "first_comp", "color", "progression_-2", used_vals=[2, 1]), [4, 5, 6, 7, 8, 9])
+        self.assertEqual(gc.eligible_values("left_right", "second_comp", "color", "progression_-2", used_vals=[]), [4, 5, 6, 7, 8, 9])
 
+    def test_panels_look_same(self):
+        comp1 = {
+            "uniformity": True,
+            "entities": [ent1]
+        }
+        comp2 = {
+            "uniformity": True,
+            "entities": [ent2]
+        }
+
+        panel1 = {
+            "structure": "left_right",
+            "first_comp": comp1,
+            "second_comp": comp2
+        }
+        panel2a = {
+            "structure": "up_down",
+            "first_comp": copy.deepcopy(comp1),
+            "second_comp": copy.deepcopy(comp2)
+        }
+        panel2b = {
+            "structure": "left_right", 
+            "first_comp": copy.deepcopy(comp1),
+            "second_comp": copy.deepcopy(comp2),
+        }
+        panel2c = {
+            "structure": "center_single", 
+            "first_comp": copy.deepcopy(comp1),
+        }
+        
+        self.assertFalse(gc.panels_look_same(panel1, panel2a))
+        self.assertTrue(gc.panels_look_same(panel1, panel2b))
+        self.assertFalse(gc.panels_look_same(panel1, panel2c))
+
+        comp1 = {
+            "uniformity": False,
+            "entities": [ent1, ent2, ent3]
+        }
+        comp2 = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent2), copy.deepcopy(ent1), copy.deepcopy(ent3)]
+        }
+        comp3 = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent2), copy.deepcopy(ent1), copy.deepcopy(ent3), ent4]
+        }
+        comp4 = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent1), copy.deepcopy(ent2)]
+        }
+
+        panel1 = {
+            "structure": "distribute_four",
+            "first_comp": comp1
+        }
+        panel2a = {
+            "structure": "distribute_four",
+            "first_comp": comp2
+        }
+        panel2b = {
+            "structure": "distribute_four",
+            "first_comp": comp3
+        }
+        panel2c = {
+            "structure": "distribute_four",
+            "first_comp": comp4
+        }
+
+        self.assertTrue(gc.panels_look_same(panel1, panel2a))
+        self.assertFalse(gc.panels_look_same(panel1, panel2b))
+        self.assertFalse(gc.panels_look_same(panel1, panel2c))
+
+    def test_comps_look_same(self):
+        comp1 = {
+            "uniformity": True,
+            "entities": [ent8, ent9, ent10]
+        }
+        comp2a = {
+            "uniformity": True,
+            "entities": [ent8, ent9, ent10]
+        }
+        comp2b = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent8), copy.deepcopy(ent9), copy.deepcopy(ent10)]
+        }
+        comp2c = {
+            "uniformity": False,
+            "entities": [copy.deepcopy(ent8), copy.deepcopy(ent9), copy.deepcopy(ent10)]
+        }
+
+        self.assertTrue(gc.comps_look_same(comp1, comp2a))
+        self.assertTrue(gc.comps_look_same(comp1, comp2b))
+        self.assertTrue(gc.comps_look_same(comp1, comp2c))
+
+        comp3a = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent8), copy.deepcopy(ent9)]
+        }
+        comp3b = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent8), copy.deepcopy(ent9), copy.deepcopy(ent10), ent11]
+        }
+        comp3c = {
+            "uniformity": True,
+            "entities": [copy.deepcopy(ent8), copy.deepcopy(ent9), ent11]
+        }
+
+        self.assertFalse(gc.comps_look_same(comp1, comp3a))
+        self.assertFalse(gc.comps_look_same(comp1, comp3b))
+        self.assertFalse(gc.comps_look_same(comp1, comp3c))
 
     def test_apply_progression_to(self):
         comp = {
@@ -492,7 +604,7 @@ class TestGenerateCustom(unittest.TestCase):
             self.assertEqual(entity["angle"], comp["entities"][i]["angle"])
             self.assertNotEqual(entity["type"], comp["entities"][i]["type"])
 
-        consistent_union_vals = [{1, 2, 4}, {3, 4, 1}, {2, 3}]
+        consistent_union_vals = [(1, 2, 4), (1, 3, 4), (2, 3)]
         ruleset = {
             "number": "NA",
             "position": "consistent-union",
@@ -743,8 +855,7 @@ class TestGenerateCustom(unittest.TestCase):
         self.assertEqual(gc.make_square(struct, first_comp), 
             {
                 "structure": "out_in_grid",
-                "first_comp": first_comp,
-                "second_comp": {}
+                "first_comp": first_comp
             }
         )
 

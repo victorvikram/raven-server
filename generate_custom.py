@@ -234,11 +234,7 @@ def eligible_values(structure, comp, attr, rel="", used_vals=None):
 def generate_concrete_json(blueprint, initial=None):
     # TODO: checks to see if the input satisfies the constraints
 
-    # print [panel["first_comp"]["entities"] for panel in initial]
-    # print [panel["second_comp"]["entities"] for panel in initial]
-
     squares = [[None for i in range(3)] for j in range(3)]
-    # print blueprint
 
     for i in range(3):
 
@@ -254,21 +250,33 @@ def generate_concrete_json(blueprint, initial=None):
     squares[1][1], squares[1][2] = complete_row(squares[1][0], blueprint, consistent_union_vals)
     squares[2][1], squares[2][2] = complete_row(squares[2][0], blueprint, consistent_union_vals)
 
-    return flatten(squares, blueprint)
+    answers, target = generate_answers(squares[2][2], blueprint)
+
+    return flatten(squares, answers, blueprint, target)
+
+def modify_square(square):
+    mod_square = {}
+    mod_square["structure"] = square["structure"]
+    mod_square["first_comp"] = square["first_comp"]["entities"]
+            
+    if "second_comp" in square:
+        mod_square["second_comp"] = square["second_comp"]["entities"]
+    
+    return mod_square
 
 
-def flatten(squares, blueprint):
-    output_dict = {"target": 0, "panels": []} # TODO implement target properly
+def flatten(squares, answers, blueprint, target):
+    output_dict = {"target": target, "panels": []} # TODO implement target properly
     for i in range(3):
         for j in range(3):
-            mod_square = {}
-            mod_square["structure"] = squares[i][j]["structure"]
-            mod_square["first_comp"] = squares[i][j]["first_comp"]["entities"]
+            mod_square = modify_square(squares[i][j])
             
-            if "second_comp" in blueprint:
-                mod_square["second_comp"] = squares[i][j]["second_comp"]["entities"]
-
-            output_dict["panels"].append(mod_square)
+            if i != 2 or j != 2:
+                output_dict["panels"].append(mod_square)
+    
+    for answer in answers:
+        mod_square = modify_square(answer)
+        output_dict["panels"].append(mod_square)
     
     return output_dict
 
@@ -343,8 +351,6 @@ def fill(val_set, attr, struct=None, comp=None):
 # and the *consistent_union_vals* (which depend on the square in the other rows), generate the last two squares
 # in the row.
 def complete_row(square, blueprint, consistent_union_vals):
-    # print square["first_comp"]
-    # print square["second_comp"]
 
     first_comp_0 = square["first_comp"]
     
@@ -352,7 +358,6 @@ def complete_row(square, blueprint, consistent_union_vals):
         second_comp_0 = square["second_comp"]
 
     # constructing square_1
-    # print("GENERATING SECOND SQUARE")
     first_comp_1 = generate_next_col(first_comp_0, "first_comp", blueprint["structure"], blueprint["first_comp"], consistent_union_vals["first_comp"])
     if "second_comp" in blueprint:
         second_comp_1 = generate_next_col(second_comp_0, "second_comp", blueprint["structure"], blueprint["second_comp"], consistent_union_vals["second_comp"])
@@ -361,7 +366,6 @@ def complete_row(square, blueprint, consistent_union_vals):
         square_1 = make_square(blueprint["structure"], first_comp_1)
 
     # constructing square_2
-    # print("GENERATING THIRD SQUARE")
     first_comp_2 = generate_next_col(first_comp_1, "first_comp", blueprint["structure"], blueprint["first_comp"], consistent_union_vals["first_comp"], prev_comp=first_comp_0)
     if "second_comp" in blueprint:
         second_comp_2 = generate_next_col(second_comp_1, "second_comp", blueprint["structure"], blueprint["second_comp"], consistent_union_vals["second_comp"], prev_comp=second_comp_0)
@@ -379,9 +383,6 @@ def generate_next_col(comp, comp_name, struct, ruleset, consistent_union_vals, p
     next_comp = copy.deepcopy(comp)
 
     for attr in ["number", "position", "type", "color", "size"]:
-        # print attr
-        print("we are doing the third column", prev_comp is not None)
-        print("length of entities in next_comp", len(next_comp["entities"]))
         if "progression" in ruleset[attr]:
             inc = int(ruleset[attr].split("_")[1])   
             apply_progression_to(next_comp, comp_name, inc, struct, ruleset, attr)
@@ -436,9 +437,6 @@ def apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, pr
         new_occupied_mask = np.random.choice([0, 1], size=(len(slots)))
         new_occupied_spots = set([i + 1 for i in np.nonzero(new_occupied_mask)[0]])
         
-        print("pre alignment")
-        print(old_occupied_spots)
-        print(new_occupied_spots)
         if old_occupied_spots.issubset(new_occupied_spots):
             diff = random.choice(list(old_occupied_spots))
             new_occupied_spots.remove(diff)
@@ -447,8 +445,6 @@ def apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, pr
             val_to_add = random.choice([val for val in slots if (len(old_occupied_spots) > 1) or (val not in old_occupied_spots)])
             new_occupied_spots.add(val_to_add)
         
-        print("post alignment")
-        print(new_occupied_spots)
         entity_to_copy = comp["entities"][0]
         for i in slots:
             if i in new_occupied_spots and i not in old_occupied_spots:
@@ -478,7 +474,7 @@ def get_entity(comp, pos):
 
     return None
 
-def remove_entity(comp, pos):
+def remove_entity(comp, pos=None):
     new_entity_list = []
     for entity in comp["entities"]:
         if entity["position"] != pos:
@@ -564,8 +560,6 @@ def apply_consistent_union_to(comp, consistent_union_vals, struct, attr, ruleset
             comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, position=pos))
 
     elif attr == "number":
-       
-
         entity_to_copy = comp["entities"][0]
         comp["entities"] = []  
         for i in range(val):
@@ -621,6 +615,117 @@ def range_of_values(attr, struct=None, comp="first_comp"):
             return list(range(1, 5))
         else:
             return list(range(1, 2))
+
+def panels_look_same(one, two):
+    if one["structure"] != two["structure"]:
+        return False
+    else:
+        first_comp_equal = comps_look_same(one["first_comp"], two["first_comp"])
+        if "second_comp" in one and "second_comp" in two:
+            second_comp_equal = comps_look_same(one["second_comp"], two["second_comp"])
+        elif "second_comp" not in one and "second_comp" not in two:
+            second_comp_equal = True
+        else:
+            second_comp_equal = False
+        return first_comp_equal and second_comp_equal
+
+def comps_look_same(one, two):
+    if len(one["entities"]) == len(two["entities"]):
+        entities_equal = 0
+        for entity in one["entities"]:
+            if entity in two["entities"]:
+                entities_equal += 1
+        return entities_equal == len(two["entities"])
+    else:
+        return False
+
+
+def generate_answers(correct_answer, blueprint, fair=True):
+    answer_choices = [correct_answer]
+    structure = correct_answer["structure"]
+
+    counter = 0
+    while len(answer_choices) < 8:
+        if fair:
+            choice_to_modify = random.choice(answer_choices)
+        else:
+            choice_to_modify = correct_answer
+        
+        new_choice = copy.deepcopy(choice_to_modify)
+        comps = list(correct_answer.keys())
+        comps.remove("structure")
+        comp_to_modify = random.choice(comps)
+        comp = new_choice[comp_to_modify]
+        ruleset = blueprint[comp_to_modify]
+
+       
+
+        if structure in ["center_single", "left_right", "up_down", "out_in"]:
+            possible_attrs = ["size", "type", "color"]
+        else:
+            possible_attrs = ["size", "type", "color", "position", "number", "uniformity"]
+        
+        if structure in ["out_in", "out_in_grid"] and comp_to_modify == "first_comp":
+            possible_attrs.remove("color")
+        
+        attr_to_modify = random.choice(possible_attrs)
+        # print(counter, attr_to_modify, comp_to_modify)
+
+        if attr_to_modify in ["size", "type", "color"]:
+            for i, entity in enumerate(comp["entities"]):
+                if not comp["uniformity"] or i == 0:
+                    vals = [val for val in range_of_values(attr_to_modify, structure, comp_to_modify) if val != entity[attr_to_modify]]
+                    new_val = random.choice(vals)
+
+                entity[attr_to_modify] = new_val
+
+        elif attr_to_modify in ["position", "number"]:
+            vals = [val for val in range_of_values("number", structure, comp_to_modify) if val != len(comp["entities"])]
+            new_val = random.choice(vals)
+            
+            if  attr_to_modify == "number":
+                # print("modifying number")
+                entity_to_copy = comp["entities"][0]
+                comp["entities"] = []
+
+                while len(comp["entities"]) < new_val:
+                    comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy))
+
+            if attr_to_modify == "position":
+                # print("modifying position")
+                while len(comp["entities"]) != new_val:
+                    if len(comp["entities"]) > new_val:
+                        entity_to_remove = random.choice(comp["entities"])
+                        remove_entity(comp, pos=entity_to_remove["position"])
+
+                    elif len(comp["entities"]) < new_val:
+                        entity_to_copy = comp["entities"][0]
+                        comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy))
+        elif attr_to_modify == "uniformity":
+            print(counter, "modifying uniformity")
+            comp["uniformity"] = not comp["uniformity"]
+            entity_to_copy = comp["entities"][0]
+
+            # resample each entity according to the new uniformity rule
+            for entity in comp["entities"]:
+                pos = entity["position"]
+                remove_entity(comp, pos=pos)
+                comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy=entity_to_copy, position=pos))
+
+        equality = False
+        for choice in answer_choices:
+            if panels_look_same(new_choice, choice):
+                equality = True
+
+        if not equality:
+            # print("added")
+            answer_choices.append(new_choice)
+        
+        counter += 1
+    
+    random.shuffle(answer_choices)
+    target = answer_choices.index(correct_answer)
+    return answer_choices, target
 
 # string dict dict -> dict
 # given a *struct*ure and two components, generates a representation of the panel
