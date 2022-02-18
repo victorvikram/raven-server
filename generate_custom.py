@@ -116,6 +116,13 @@ def impose_constraints(structure, comp, blueprint):
     
     if structure in ["out_in", "out_in_grid"] and comp == "first_comp":
         blueprint[comp]["color"] = "constant"
+
+   
+    if structure in ["out_in_grid", "distribute_four"] and ("progression" in blueprint[comp]["number"]):
+        if int(blueprint[comp]["number"].split("_")[1]) > 0:
+            blueprint[comp]["number"] = "progression_1"
+        else:
+            blueprint[comp]["number"] = "progression_-1"
     
     if blueprint[comp]["type"] == "arithmetic":
         new_relation = random.choice(["constant", "progression", "consistent_union"])
