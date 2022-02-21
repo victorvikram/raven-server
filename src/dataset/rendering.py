@@ -267,7 +267,29 @@ def draw_hexagon(img, pts, color, width, linecolor=255):
         # fill the interior
         cv2.fillConvexPoly(img, pts, color)
         # draw the edge
-        cv2.polylines(img, [pts], True, linecolor, width) # CHANGED
+        cv2.polylines(img, [pts], True, linecolor, width)
+    # if not filled
+    else:
+        cv2.polylines(img, [pts], True, linecolor, width)
+
+def draw_septagon(img, pts, color, width, linecolor=255):
+    # if filled
+    if color != 0:
+        # fill the interior
+        cv2.fillConvexPoly(img, pts, color)
+        # draw the edge
+        cv2.polylines(img, [pts], True, linecolor, width)
+    # if not filled
+    else:
+        cv2.polylines(img, [pts], True, linecolor, width)
+
+def draw_octagon(img, pts, color, width, linecolor=255):
+    # if filled
+    if color != 0:
+        # fill the interior
+        cv2.fillConvexPoly(img, pts, color)
+        # draw the edge
+        cv2.polylines(img, [pts], True, linecolor, width)
     # if not filled
     else:
         cv2.polylines(img, [pts], True, linecolor, width)
