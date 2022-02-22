@@ -87,8 +87,8 @@ def generate_random_blueprint(structure=None):
         for attr in ["position", "number", "size", "type", "color"]:
             blueprint[comp][attr] = random.choice(options)
 
-        impose_constraints(structure, comp, blueprint)
         decorate_relations(structure, comp, blueprint)
+        impose_constraints(structure, comp, blueprint)
     
     return blueprint
 
@@ -124,9 +124,10 @@ def impose_constraints(structure, comp, blueprint):
         else:
             blueprint[comp]["number"] = "progression_-1"
     
-    if blueprint[comp]["type"] == "arithmetic":
+    if "arithmetic" in blueprint[comp]["type"]:
         new_relation = random.choice(["constant", "progression", "consistent_union"])
         blueprint[comp]["type"] = new_relation
+        decorate_relations(structure, comp, blueprint)
 
 def sample_posns(structure, comp):
     number_to_select = random.choice(range_of_values("position", structure, comp))
