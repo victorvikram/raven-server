@@ -90,6 +90,11 @@ def generate_random_blueprint(structure=None):
         decorate_relations(structure, comp, blueprint)
         impose_constraints(structure, comp, blueprint)
     
+    uniformity = random.choice([True, False, None])
+
+    if uniformity is not None:
+        blueprint["uniformity"] = uniformity
+    
     return blueprint
 
 # string string dict ->
@@ -143,7 +148,11 @@ def generate_initials(blueprint):
 
     initials = []
     for i in range(3):
-        uniformity = random.choice([True, False])
+        if "uniformity" in blueprint:
+            uniformity = blueprint["uniformity"]
+        else:
+            uniformity = random.choice([True, False])
+
         panel = {"structure": structure} 
         for comp in components:
             rels = blueprint[comp]
@@ -170,7 +179,7 @@ def generate_initials(blueprint):
  
             const_attrs = {}  
             for attr in ["type", "size", "color", "angle"]:
-                if uniformity or (rels[attr] not in ["constant", "NA"]):
+                if uniformity or (rels[attr] not in ["constant", "NA", "random"]):
                     eligible_vals = eligible_values(structure, comp, attr, rels[attr], used_vals=prev_used[comp][attr])
                     val = random.choice(eligible_vals)
 
@@ -401,8 +410,59 @@ def generate_next_col(comp, comp_name, struct, ruleset, consistent_union_vals, p
         elif "arithmetic" in ruleset[attr]:
             direction = ruleset[attr].split("_")[1]
             apply_arithmetic_to(next_comp, comp_name, direction, struct, ruleset, attr, prev_comp)
+        
+        elif "constant" in ruleset[attr]:
+            apply_constant_to(next_comp, comp_name, struct, ruleset, attr, prev_comp)
+        
+        elif "random" in ruleset[attr]:
+            apply_random_to(next_comp, comp_name, struct, ruleset, attr, prev_comp)
 
     return next_comp
+
+def apply_random_to(comp, comp_name, struct, ruleset, attr, prev_comp):
+    if attr == "number":
+        new_number = random.choice(range_of_values(attr, struct, comp_name))
+        entity_to_copy = comp["entities"][0]
+        comp["entities"] = []
+
+        for i in range(new_number):
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+
+    elif attr == "position":
+        posns = sample_posns(struct, comp_name)
+        entity_to_copy = comp["entities"][0]
+        comp["entities"] = []
+
+        for posn in posns:
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, pos=posn))
+
+    else:
+        new_val = random.choice(range_of_values(attr, struct, comp_name))
+
+        for entity in comp["entities"]:
+            if not comp["uniformity"]:
+                new_val = random.choice(range_of_values(attr, struct, comp_name))
+            
+            entity[attr] = new_val
+
+def in_multi_entity_comp(struct, comp_name):
+    if struct in ["center_single", "out_in", "left_right", "up_down"]:
+        return False
+    elif struct == "out_in_grid" and comp_name == "first_comp":
+        return False
+    elif struct == "out_in_grid" and comp_name == "second_comp":
+        return True
+    elif struct in ["distribute_four", "distribute_nine"]:
+        return True
+
+def apply_constant_to(comp, comp_name, struct, ruleset, attr, prev_comp=None):
+    if attr == "number" and in_multi_entity_comp(struct, comp_name):
+        number_of_entities = len(comp["entities"])
+        entity_to_copy = comp["entities"][0]
+        comp["entities"] = []
+
+        for i in range(number_of_entities):
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
 
 # dict int string string ->
 # modifies *comp* to reflect a progression of a certain *inc*rement on a given *attr*ibute.
@@ -580,27 +640,28 @@ def apply_consistent_union_to(comp, consistent_union_vals, struct, attr, ruleset
 # dict string dict -> 
 # places a new entity in an unoccupied spot in *comp*, and determines its attributes
 # ~tested~
-def place_new_entity(comp, struct, ruleset, entity_to_copy=None, position=None):
-    non_constant_attrs = [attr for attr in ruleset if ruleset[attr] != "constant"]
-    comp_uni = comp["uniformity"]
-    occupied_positions = {entity["position"] for entity in comp["entities"]}
-    struct_positions = 4 if (struct == "distribute_four") or (struct == "out_in_grid") else 9 # on
+def place_new_entity(comp, struct, ruleset, entity_to_copy=None, position=None, comp_name="second_comp"):
+    if in_multi_entity_comp(struct, comp_name):
+        non_constant_attrs = [attr for attr in ruleset if ruleset[attr] not in ["constant", "random"]]
+        comp_uni = comp["uniformity"]
+        occupied_positions = {entity["position"] for entity in comp["entities"]}
+        struct_positions = 4 if (struct == "distribute_four") or (struct == "out_in_grid") else 9 # on
 
-    if position is None:
-        available_positions = [i for i in range(1, struct_positions + 1) if i not in occupied_positions]
-        position = random.choice(available_positions)
-        print_stuff = False
+        if position is None:
+            available_positions = [i for i in range(1, struct_positions + 1) if i not in occupied_positions]
+            position = random.choice(available_positions)
+            print_stuff = False
 
-    new_entity = {"position": position}
+        new_entity = {"position": position}
 
-    if entity_to_copy is None:
-        entity_to_copy = comp["entities"][0]
+        if entity_to_copy is None:
+            entity_to_copy = comp["entities"][0]
+        
+        for attr in entity_to_copy:
+            if attr != "position":
+                new_entity[attr] = entity_to_copy[attr] if (attr in non_constant_attrs) or comp_uni else random.choice(range_of_values(attr))
     
-    for attr in entity_to_copy:
-        if attr != "position":
-            new_entity[attr] = entity_to_copy[attr] if (attr in non_constant_attrs) or comp_uni else random.choice(range_of_values(attr))
-  
-    return new_entity
+        return new_entity
         
 # string dict int -> range
 # returns the range of possible values an *attr* can take in a given *struct*ure *comp*onent
