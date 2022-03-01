@@ -159,7 +159,7 @@ def generate_initials(blueprint):
             rels["angle"] = "NA"
 
             # TODO fix this, it doesn't prevent equal positions
-            if rels["position"] not in ["constant", "NA"]:
+            if rels["position"] not in ["constant", "constant!", "NA"]:
                 posns = sample_posns(structure, comp)
 
                 if rels["position"] == "consistent_union":
@@ -526,7 +526,7 @@ def apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, pr
             if pos not in curr_occupied_spots:
                 new_entity = copy.deepcopy(get_entity(prev_comp, pos))
                 for attr in ruleset:
-                    if ruleset[attr] not in ["constant", "NA"] and attr != "number" and attr != "position":
+                    if ruleset[attr] not in ["constant", "constant!", "NA"] and attr != "number" and attr != "position":
                         new_entity[attr] = comp["entities"][0][attr]
 
                 comp["entities"].append(new_entity)
@@ -731,12 +731,16 @@ def generate_answers(correct_answer, blueprint, fair=True):
 
         if structure in ["center_single", "left_right", "up_down", "out_in"]:
             possible_attrs = ["size", "type", "color"]
-        else:
+        elif structure in ["distribute_nine", "distribute_four", "out_in_grid"]:
             possible_attrs = ["size", "type", "color", "position", "number", "uniformity"]
         
         if structure in ["out_in", "out_in_grid"] and comp_to_modify == "first_comp":
-            possible_attrs.remove("color")
+            if "color" in possible_attrs: possible_attrs.remove("color")
+            if "uniformity" in possible_attrs: possible_attrs.remove("uniformity")
+            if "position" in possible_attrs: possible_attrs.remove("position")
+            if "number" in possible_attrs: possible_attrs.remove("number")
         
+        print(possible_attrs)
         attr_to_modify = random.choice(possible_attrs)
         # print(counter, attr_to_modify, comp_to_modify)
 
