@@ -272,11 +272,16 @@ def generate_concrete_json(blueprint, initial=None):
     return flatten(squares, answers, blueprint, target)
 
 def modify_square(square):
+    square["first_comp"]["entities"].sort(key=(lambda elt : elt["position"]))
     mod_square = {}
     mod_square["structure"] = square["structure"]
+    
+    
+
     mod_square["first_comp"] = square["first_comp"]["entities"]
             
     if "second_comp" in square:
+        square["second_comp"]["entities"].sort(key=(lambda elt : elt["position"]))
         mod_square["second_comp"] = square["second_comp"]["entities"]
     
     return mod_square
