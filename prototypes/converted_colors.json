@@ -1,0 +1,213 @@
+{
+    "target": 1,
+    "panels": [
+      {
+        "first_comp": [
+          {
+            "angle": 1,
+            "color": 0,
+            "position": 1,
+            "size": 4,
+            "type": 3,
+            "linesize": 2
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 1,
+            "color": 1,
+            "position": 1,
+            "size": 4,
+            "type": 5,
+            "linesize": 3
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 1,
+            "color": 3,
+            "position": 1,
+            "size": 4,
+            "type": 7,
+            "linesize": 4
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 0,
+            "color": 5,
+            "position": 1,
+            "size": 3,
+            "type": 3,
+            "linesize": 0
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 0,
+            "color": 7,
+            "position": 1,
+            "size": 3,
+            "type": 5,
+            "linesize": 1
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 0,
+            "color": 9,
+            "position": 1,
+            "size": 3,
+            "type": 7,
+            "linesize": 2
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 0,
+            "position": 1,
+            "size": 2,
+            "type": 3,
+            "linesize": 1
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 0,
+            "position": 1,
+            "size": 2,
+            "type": 5,
+            "linesize": 2
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 1,
+            "position": 1,
+            "size": 5,
+            "type": 6,
+            "linesize": 2
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 1,
+            "position": 1,
+            "size": 2,
+            "type": 7,
+            "linesize": 3
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 3,
+            "position": 1,
+            "size": 3,
+            "type": 3,
+            "linesize": 3
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 3,
+            "position": 1,
+            "size": 2,
+            "type": 7,
+            "linesize": 2
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 5,
+            "position": 1,
+            "size": 2,
+            "type": 6,
+            "linesize": 3
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 5,
+            "position": 1,
+            "size": 3,
+            "type": 3,
+            "linesize": 2
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 7,
+            "position": 1,
+            "size": 3,
+            "type": 7,
+            "linesize": 3
+          }
+        ],
+        "structure": "center_single"
+      },
+      {
+        "first_comp": [
+          {
+            "angle": 2,
+            "color": 9,
+            "position": 1,
+            "size": 3,
+            "type": 7,
+            "linesize": 3
+          }
+        ],
+        "structure": "center_single"
+      }
+    ]
+  }

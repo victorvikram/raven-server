@@ -72,6 +72,11 @@ import copy
 import random
 import numpy as np
 
+
+
+
+
+
 # string -> dict
 # generates a random blueprint for a given structure, where the structure is sampled uniformly at random and relations are too, subject to constraints
 def generate_random_blueprint(structure=None):
@@ -87,9 +92,8 @@ def generate_random_blueprint(structure=None):
         for attr in ["position", "number", "size", "type", "color"]:
             blueprint[comp][attr] = random.choice(options)
 
-        decorate_relations(structure, comp, blueprint)
-        impose_constraints(structure, comp, blueprint)
-    
+    decorate_relations(blueprint)
+    impose_constraints(blueprint)
     uniformity = random.choice([True, False, None])
 
     if uniformity is not None:
@@ -97,42 +101,59 @@ def generate_random_blueprint(structure=None):
     
     return blueprint
 
+def iterate_through_attrs(blueprint, func, acc):
+    comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
+    for comp in comps:
+        for attr in blueprint[comp]:
+            acc = func(blueprint[comp][attr], acc)
+    
+    return acc
+
+
+
 # string string dict ->
 # modifies the *blueprint* so that the relations are decorated with their subtype (e.g. "progression" becomes "progression_-1")
-def decorate_relations(structure, comp, blueprint):
-    for attr in ["position", "number", "size", "type", "color"]:
-        if blueprint[comp][attr] == "progression":
-            increment = random.choice(["-2", "-1", "1", "2"])
-            blueprint[comp][attr] = "progression_" + increment
+def decorate_relations(blueprint):
+    comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
+    for comp in comps:
+        for attr in ["position", "number", "size", "type", "color"]:
+            if blueprint[comp][attr] == "progression":
+                increment = random.choice(["-2", "-1", "1", "2"])
+                blueprint[comp][attr] = "progression_" + increment
 
-        elif blueprint[comp][attr] == "arithmetic":
-            direction = random.choice(["add", "sub"])
-            blueprint[comp][attr] = "arithmetic_" + direction
+            elif blueprint[comp][attr] == "arithmetic":
+                direction = random.choice(["add", "sub"])
+                blueprint[comp][attr] = "arithmetic_" + direction
     
 # string string dict ->
 # modifies *blueprint* so that it satisfies constraints on what kinds of relations are permissible on what attributes
-def impose_constraints(structure, comp, blueprint):
-    if structure in ["center_single",  "left_right", "up_down", "out_in"] or (structure == "out_in_grid" and comp == "first_comp"):
-        blueprint[comp]["position"] = "constant"
-        blueprint[comp]["number"] = "constant"
-    else:
-        pos_or_number = random.choice(["number", "position"])
-        blueprint[comp][pos_or_number] = "NA"
-    
-    if structure in ["out_in", "out_in_grid"] and comp == "first_comp":
-        blueprint[comp]["color"] = "constant"
+def impose_constraints(blueprint):
+    structure = blueprint["structure"]
 
-   
-    if structure in ["out_in_grid", "distribute_four"] and ("progression" in blueprint[comp]["number"]):
-        if int(blueprint[comp]["number"].split("_")[1]) > 0:
-            blueprint[comp]["number"] = "progression_1"
+    comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
+
+    for comp in comps:
+        if structure in ["center_single",  "left_right", "up_down", "out_in"] or (structure == "out_in_grid" and comp == "first_comp"):
+            blueprint[comp]["position"] = "constant"
+            blueprint[comp]["number"] = "constant"
         else:
-            blueprint[comp]["number"] = "progression_-1"
+            pos_or_number = random.choice(["number", "position"])
+            blueprint[comp][pos_or_number] = "NA"
+        
+        if structure in ["out_in", "out_in_grid"] and comp == "first_comp":
+            blueprint[comp]["color"] = "constant"
+
     
-    if "arithmetic" in blueprint[comp]["type"]:
-        new_relation = random.choice(["constant", "progression", "consistent_union"])
-        blueprint[comp]["type"] = new_relation
-        decorate_relations(structure, comp, blueprint)
+        if structure in ["out_in_grid", "distribute_four"] and ("progression" in blueprint[comp]["number"]):
+            if int(blueprint[comp]["number"].split("_")[1]) > 0:
+                blueprint[comp]["number"] = "progression_1"
+            else:
+                blueprint[comp]["number"] = "progression_-1"
+        
+        if "arithmetic" in blueprint[comp]["type"]:
+            new_relation = random.choice(["constant", "progression", "consistent_union"])
+            blueprint[comp]["type"] = new_relation
+            decorate_relations(blueprint)
 
 def sample_posns(structure, comp):
     number_to_select = random.choice(range_of_values("position", structure, comp))
@@ -140,7 +161,7 @@ def sample_posns(structure, comp):
     posns.sort()
     return tuple(posns)
 
-def generate_initials(blueprint):
+def generate_initials(blueprint, human=False):
     structure = blueprint["structure"]
     components = ["first_comp"] if blueprint["structure"] in ["center_single", "distribute_four", "distribute_nine"] else ["first_comp", "second_comp"]
 
@@ -169,18 +190,18 @@ def generate_initials(blueprint):
                     prev_used[comp]["position"].add(tuple(posns))
 
             else:
-                eligible_vals = eligible_values(structure, comp, "number", rels["number"], used_vals=prev_used[comp]["number"])
+                eligible_vals = eligible_values(structure, comp, "number", rels["number"], used_vals=prev_used[comp]["number"], human=human)
                 number = random.choice(eligible_vals)
 
                 if rels["number"] == "consistent_union":
                     prev_used[comp]["number"].add(number)
                 
-                posns = random.sample(eligible_values(structure, comp, "position", rels["position"]), number)
+                posns = random.sample(eligible_values(structure, comp, "position", rels["position"], human=human), number)
  
             const_attrs = {}  
             for attr in ["type", "size", "color", "angle"]:
                 if uniformity or (rels[attr] not in ["constant", "NA", "random"]):
-                    eligible_vals = eligible_values(structure, comp, attr, rels[attr], used_vals=prev_used[comp][attr])
+                    eligible_vals = eligible_values(structure, comp, attr, rels[attr], used_vals=prev_used[comp][attr], human=human)
                     val = random.choice(eligible_vals)
 
                     const_attrs[attr] = val
@@ -196,7 +217,7 @@ def generate_initials(blueprint):
                     if attr in const_attrs:
                         entity[attr] = const_attrs[attr]
                     else:
-                        entity[attr] = random.choice(eligible_values(structure, comp, attr, rels[attr]))
+                        entity[attr] = random.choice(eligible_values(structure, comp, attr, rels[attr], human=human))
                 
                 entities.append(entity)
             
@@ -209,7 +230,7 @@ def generate_initials(blueprint):
     return initials
 
 # ~tested~
-def eligible_values(structure, comp, attr, rel="", used_vals=None):
+def eligible_values(structure, comp, attr, rel="", used_vals=None, human=False):
     if structure in ["out_in_grid", "out_in"] and comp == "first_comp" and attr == "color":
         return [0]
 
@@ -218,8 +239,8 @@ def eligible_values(structure, comp, attr, rel="", used_vals=None):
 
     elif "progression" in rel and attr != "position" and attr != "angle":
         inc = int(rel.split("_")[1])
-        max_final = max(range_of_values(attr, structure, comp))
-        min_final = min(range_of_values(attr, structure, comp))
+        max_final = max(range_of_values(attr, structure, comp, human))
+        min_final = min(range_of_values(attr, structure, comp, human))
         max_initial = min(max_final - inc * 2, max_final)
         min_initial = max(min_final - inc * 2, min_final)
 
@@ -228,27 +249,27 @@ def eligible_values(structure, comp, attr, rel="", used_vals=None):
     elif "arithmetic" in rel and attr != "position" and attr != "angle":
         direction = rel.split("_")[1]
         if direction == "add":
-            min_val = min(range_of_values(attr, structure, comp))
-            max_val = max(range_of_values(attr, structure, comp)) - min_val
+            min_val = min(range_of_values(attr, structure, comp, human))
+            max_val = max(range_of_values(attr, structure, comp, human)) - min_val
         elif direction == "sub":
-            min_val = min(range_of_values(attr, structure, comp))*2
-            max_val = max(range_of_values(attr, structure, comp))
+            min_val = min(range_of_values(attr, structure, comp, human))*2
+            max_val = max(range_of_values(attr, structure, comp, human))
 
         return list(range(min_val, max_val + 1))
     
     elif "consistent_union" == rel and attr != "position" and attr != "angle":
-        eligible_values = [val for val in range_of_values(attr, structure, comp) if val not in used_vals]
+        eligible_values = [val for val in range_of_values(attr, structure, comp, human) if val not in used_vals]
         return eligible_values
 
     else:
-        return range_of_values(attr, structure, comp)
+        return range_of_values(attr, structure, comp, human)
     
     
 # dict dict -> dict
 # takes a problem *blueprint* (a structure and what the rules are for each component) and (optionally) *initial*
 # values. then it returns a concrete json file--one that explicitly lays out all the entities and their attributes.
 # if no initial values are given, it generates them randomly. 
-def generate_concrete_json(blueprint, initial=None):
+def generate_concrete_json(blueprint, initial=None, human=False):
     # TODO: checks to see if the input satisfies the constraints
 
     squares = [[None for i in range(3)] for j in range(3)]
@@ -261,15 +282,15 @@ def generate_concrete_json(blueprint, initial=None):
 
         squares[i][0] = panel
 
-    consistent_union_vals = establish_consistent_union_values(blueprint, initial)
+    consistent_union_vals = establish_consistent_union_values(blueprint, initial, human=human)
 
-    squares[0][1], squares[0][2] = complete_row(squares[0][0], blueprint, consistent_union_vals)
-    squares[1][1], squares[1][2] = complete_row(squares[1][0], blueprint, consistent_union_vals)
-    squares[2][1], squares[2][2] = complete_row(squares[2][0], blueprint, consistent_union_vals)
+    squares[0][1], squares[0][2] = complete_row(squares[0][0], blueprint, consistent_union_vals, human=human)
+    squares[1][1], squares[1][2] = complete_row(squares[1][0], blueprint, consistent_union_vals, human=human)
+    squares[2][1], squares[2][2] = complete_row(squares[2][0], blueprint, consistent_union_vals, human=human)
 
-    answers, target = generate_answers(squares[2][2], blueprint)
+    answers, target = generate_answers(squares[2][2], blueprint, human=human)
 
-    return flatten(squares, answers, blueprint, target)
+    return flatten(squares, answers, blueprint, target, human)
 
 def modify_square(square):
     square["first_comp"]["entities"].sort(key=(lambda elt : elt["position"]))
@@ -287,8 +308,8 @@ def modify_square(square):
     return mod_square
 
 
-def flatten(squares, answers, blueprint, target):
-    output_dict = {"target": target, "panels": []} # TODO implement target properly
+def flatten(squares, answers, blueprint, target, human):
+    output_dict = {"target": target, "human": human, "panels": []} # TODO implement target properly
     for i in range(3):
         for j in range(3):
             mod_square = modify_square(squares[i][j])
@@ -322,7 +343,7 @@ def convert_components_to_dicts(initial):
 # For any attributes that follow the consistent_union relation in the *blueprint*, we save the three values that
 # form the consistent union by looking at the three *initial* values for each of the rows. If there are fewer 
 # than three values, we fill the set up randomly.
-def establish_consistent_union_values(blueprint, initial):
+def establish_consistent_union_values(blueprint, initial, human=False):
     # TODO add a method for sampling new positions and new
     # TODO fix the second comp thing
     comps = ["first_comp"]
@@ -347,7 +368,7 @@ def establish_consistent_union_values(blueprint, initial):
                     candidate = [initial[i][comp]["entities"][0][attr] for i in range(3)]
 
                 candidate_set = set(candidate)
-                candidate = fill(candidate_set, attr, blueprint["structure"], comp)
+                candidate = fill(candidate_set, attr, blueprint["structure"], comp, human=human)
                 vals[comp][attr] = candidate
 
     return vals
@@ -355,13 +376,13 @@ def establish_consistent_union_values(blueprint, initial):
 # set string -> 
 # if *val_set* has fewer than three values, it fills it up with random values that
 # are in the required range of *attr*     
-def fill(val_set, attr, struct=None, comp=None):
+def fill(val_set, attr, struct=None, comp=None, human=False):
     while len(val_set) < 3:
         if attr == "position":
             posns = sample_posns(struct, comp)
             val_set.add(posns)
         else:
-            possible_new_values = [val for val in range_of_values(attr) if val not in val_set]
+            possible_new_values = [val for val in range_of_values(attr, struct=struct, comp=comp, human=human) if val not in val_set]
             new_addition = random.choice(possible_new_values)
             val_set.add(new_addition)
     
@@ -372,7 +393,7 @@ def fill(val_set, attr, struct=None, comp=None):
 # given the first *square* in a row, the *blueprint* that contains structure infromation and relation information, 
 # and the *consistent_union_vals* (which depend on the square in the other rows), generate the last two squares
 # in the row.
-def complete_row(square, blueprint, consistent_union_vals):
+def complete_row(square, blueprint, consistent_union_vals, human=False):
 
     first_comp_0 = square["first_comp"]
     
@@ -380,17 +401,17 @@ def complete_row(square, blueprint, consistent_union_vals):
         second_comp_0 = square["second_comp"]
 
     # constructing square_1
-    first_comp_1 = generate_next_col(first_comp_0, "first_comp", blueprint["structure"], blueprint["first_comp"], consistent_union_vals["first_comp"])
+    first_comp_1 = generate_next_col(first_comp_0, "first_comp", blueprint["structure"], blueprint["first_comp"], consistent_union_vals["first_comp"], human=human)
     if "second_comp" in blueprint:
-        second_comp_1 = generate_next_col(second_comp_0, "second_comp", blueprint["structure"], blueprint["second_comp"], consistent_union_vals["second_comp"])
+        second_comp_1 = generate_next_col(second_comp_0, "second_comp", blueprint["structure"], blueprint["second_comp"], consistent_union_vals["second_comp"], human=human)
         square_1 = make_square(blueprint["structure"], first_comp_1, second_comp_1)
     else:
         square_1 = make_square(blueprint["structure"], first_comp_1)
 
     # constructing square_2
-    first_comp_2 = generate_next_col(first_comp_1, "first_comp", blueprint["structure"], blueprint["first_comp"], consistent_union_vals["first_comp"], prev_comp=first_comp_0)
+    first_comp_2 = generate_next_col(first_comp_1, "first_comp", blueprint["structure"], blueprint["first_comp"], consistent_union_vals["first_comp"], prev_comp=first_comp_0, human=human)
     if "second_comp" in blueprint:
-        second_comp_2 = generate_next_col(second_comp_1, "second_comp", blueprint["structure"], blueprint["second_comp"], consistent_union_vals["second_comp"], prev_comp=second_comp_0)
+        second_comp_2 = generate_next_col(second_comp_1, "second_comp", blueprint["structure"], blueprint["second_comp"], consistent_union_vals["second_comp"], prev_comp=second_comp_0, human=human)
         square_2 = make_square(blueprint["structure"], first_comp_2, second_comp_2)
     else:
         square_2 = make_square(blueprint["structure"], first_comp_2)
@@ -401,37 +422,37 @@ def complete_row(square, blueprint, consistent_union_vals):
 # transforms *comp* according to the rules in *ruleset*, if this is the third col then *prev_comp* is also passed
 # *struct* can determine the range of attribute values, and *consistent_union_vals* provides the values that 
 # consistent_union attributes can take. 
-def generate_next_col(comp, comp_name, struct, ruleset, consistent_union_vals, prev_comp=None):
+def generate_next_col(comp, comp_name, struct, ruleset, consistent_union_vals, prev_comp=None, human=False):
     next_comp = copy.deepcopy(comp)
 
     for attr in ["number", "position", "type", "color", "size"]:
         if "progression" in ruleset[attr]:
             inc = int(ruleset[attr].split("_")[1])   
-            apply_progression_to(next_comp, comp_name, inc, struct, ruleset, attr)
+            apply_progression_to(next_comp, comp_name, inc, struct, ruleset, attr, human)
 
         elif "consistent_union" == ruleset[attr]:
-            apply_consistent_union_to(next_comp, consistent_union_vals[attr], struct, attr, ruleset, prev_comp)
+            apply_consistent_union_to(next_comp, consistent_union_vals[attr], struct, attr, ruleset, prev_comp, human)
 
         elif "arithmetic" in ruleset[attr]:
             direction = ruleset[attr].split("_")[1]
-            apply_arithmetic_to(next_comp, comp_name, direction, struct, ruleset, attr, prev_comp)
+            apply_arithmetic_to(next_comp, comp_name, direction, struct, ruleset, attr, prev_comp, human)
         
         elif "constant" in ruleset[attr]:
-            apply_constant_to(next_comp, comp_name, struct, ruleset, attr, prev_comp)
+            apply_constant_to(next_comp, comp_name, struct, ruleset, attr, prev_comp, human)
         
         elif "random" in ruleset[attr]:
-            apply_random_to(next_comp, comp_name, struct, ruleset, attr, prev_comp)
+            apply_random_to(next_comp, comp_name, struct, ruleset, attr, prev_comp, human)
 
     return next_comp
 
-def apply_random_to(comp, comp_name, struct, ruleset, attr, prev_comp):
+def apply_random_to(comp, comp_name, struct, ruleset, attr, prev_comp, human=False):
     if attr == "number":
-        new_number = random.choice(range_of_values(attr, struct, comp_name))
+        new_number = random.choice(range_of_values(attr, struct, comp_name, human))
         entity_to_copy = comp["entities"][0]
         comp["entities"] = []
 
         for i in range(new_number):
-            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, human=human))
 
     elif attr == "position":
         posns = sample_posns(struct, comp_name)
@@ -439,14 +460,14 @@ def apply_random_to(comp, comp_name, struct, ruleset, attr, prev_comp):
         comp["entities"] = []
 
         for posn in posns:
-            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, pos=posn))
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, pos=posn, human=human))
 
     else:
-        new_val = random.choice(range_of_values(attr, struct, comp_name))
+        new_val = random.choice(range_of_values(attr, struct, comp_name, human))
 
         for entity in comp["entities"]:
             if not comp["uniformity"]:
-                new_val = random.choice(range_of_values(attr, struct, comp_name))
+                new_val = random.choice(range_of_values(attr, struct, comp_name, human))
             
             entity[attr] = new_val
 
@@ -460,32 +481,32 @@ def in_multi_entity_comp(struct, comp_name):
     elif struct in ["distribute_four", "distribute_nine"]:
         return True
 
-def apply_constant_to(comp, comp_name, struct, ruleset, attr, prev_comp=None):
+def apply_constant_to(comp, comp_name, struct, ruleset, attr, prev_comp=None, human=False):
     if attr == "number" and in_multi_entity_comp(struct, comp_name):
         number_of_entities = len(comp["entities"])
         entity_to_copy = comp["entities"][0]
         comp["entities"] = []
 
         for i in range(number_of_entities):
-            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, human=human))
 
 # dict int string string ->
 # modifies *comp* to reflect a progression of a certain *inc*rement on a given *attr*ibute.
 # *struct* can determine how many position fields there are
 # ~tested~
-def apply_progression_to(comp, comp_name, inc, struct, ruleset, attr):
+def apply_progression_to(comp, comp_name, inc, struct, ruleset, attr, human=False):
     # TODO need to remove entities also
     if attr == "number":
         entity_to_copy = comp["entities"][0]
         target_number = len(comp["entities"]) + inc
         comp["entities"] = []
         for i in range(target_number):
-            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, human=human))
     else:
         for entity in comp["entities"]:
             new_val = entity[attr] + inc
             
-            possible_range = range_of_values(attr, struct=struct, comp=comp_name)
+            possible_range = range_of_values(attr, struct=struct, comp=comp_name, human=human)
             if new_val not in possible_range and attr == "position":
                 new_val = new_val % len(possible_range) # TODO for attributes other than position, do something besides wrapping around
                 
@@ -495,17 +516,17 @@ def apply_progression_to(comp, comp_name, inc, struct, ruleset, attr):
 # dict string string string dict ->
 # modifies *comp* to reflect an arithmetic relationship in a given *direction* ("add" or "sub") on an *attr*ibute
 # if its the second row, we can sample a random value, but the third column is completely determined by the last two
-def apply_arithmetic_to(comp, comp_name, direction, struct, ruleset, attr, prev_comp=None):
+def apply_arithmetic_to(comp, comp_name, direction, struct, ruleset, attr, prev_comp=None, human=False):
     # TODO need to implement this for position
     if attr == "position":
-        apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, prev_comp)
+        apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, prev_comp, human=human)
     else:
-        apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_comp, ruleset)
+        apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_comp, ruleset, human=human)
 
 # ~tested~
-def apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, prev_comp=None):
+def apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, prev_comp=None, human=False):
     if prev_comp is None:
-        slots = range_of_values("position", struct, comp_name)
+        slots = range_of_values("position", struct, comp_name, human)
         old_occupied_spots = {entity["position"] for entity in comp["entities"]}
         new_occupied_mask = np.random.choice([0, 1], size=(len(slots)))
         new_occupied_spots = set([i + 1 for i in np.nonzero(new_occupied_mask)[0]])
@@ -521,7 +542,7 @@ def apply_position_arithmetic_to(comp, comp_name, direction, struct, ruleset, pr
         entity_to_copy = comp["entities"][0]
         for i in slots:
             if i in new_occupied_spots and i not in old_occupied_spots:
-                comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, position=i))
+                comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, position=i, human=human))
             elif i not in new_occupied_spots and i in old_occupied_spots:
                 remove_entity(comp, i)
     else: 
@@ -559,10 +580,10 @@ def remove_entity(comp, pos=None):
 # dict string string string dict dict ->
 # modifies *comp* according to the arithmetic progression rule on attribute *attr*
 # ~tested~
-def apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_comp=None, ruleset=None, uniform=True):
+def apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_comp=None, ruleset=None, uniform=True, human=False):
     if prev_comp is None:
-        max_sum = max(range_of_values(attr, struct, comp_name))
-        min_sum = min(range_of_values(attr, struct, comp_name))
+        max_sum = max(range_of_values(attr, struct, comp_name, human))
+        min_sum = min(range_of_values(attr, struct, comp_name, human))
 
         # TODO for now we are assuming all entities share the attribute. We will relax this later. 
         curr_value = len(comp["entities"]) if attr == "number" else comp["entities"][0][attr]
@@ -582,7 +603,7 @@ def apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_co
             entity_to_copy = comp["entities"][0]
             comp["entities"] = []
             for i in range(new_val):
-                comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+                comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, human=human))
             
         for i, entity in enumerate(comp["entities"]):
             entity[attr] = new_val
@@ -594,7 +615,7 @@ def apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_co
             new_val = len(prev_comp["entities"]) + multiplier*len(comp["entities"])
             comp["entities"] = []
             for i in range(new_val):
-                comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+                comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, human=human))
         else:
             for i, entity in enumerate(comp["entities"]):
                 # TODO this is going to cause problems when we stack arithmetic on top of other transformations
@@ -604,7 +625,7 @@ def apply_normal_arithmetic_to(comp, comp_name, direction, struct, attr, prev_co
 # transforms *comp* so it displays a consistent_union on an *attr*. Samples randomly from candidate
 # *consistent_union_vals*
 # ~tested~
-def apply_consistent_union_to(comp, consistent_union_vals, struct, attr, ruleset=None, prev_comp=None):
+def apply_consistent_union_to(comp, consistent_union_vals, struct, attr, ruleset=None, prev_comp=None, human=False):
     # TODO maybe check to see if I accidentally create another type of relation
 
     if attr == "position":
@@ -630,13 +651,13 @@ def apply_consistent_union_to(comp, consistent_union_vals, struct, attr, ruleset
         entity_to_copy = comp["entities"][0]
         comp["entities"] = []
         for pos in val:
-            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, position=pos))
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, position=pos, human=human))
 
     elif attr == "number":
         entity_to_copy = comp["entities"][0]
         comp["entities"] = []  
         for i in range(val):
-            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy))
+            comp["entities"].append(place_new_entity(comp, struct, ruleset, entity_to_copy=entity_to_copy, human=human))
     
     else:
         for i, entity in enumerate(comp["entities"]):
@@ -645,7 +666,7 @@ def apply_consistent_union_to(comp, consistent_union_vals, struct, attr, ruleset
 # dict string dict -> 
 # places a new entity in an unoccupied spot in *comp*, and determines its attributes
 # ~tested~
-def place_new_entity(comp, struct, ruleset, entity_to_copy=None, position=None, comp_name="second_comp"):
+def place_new_entity(comp, struct, ruleset, entity_to_copy=None, position=None, comp_name="second_comp", human=False):
     if in_multi_entity_comp(struct, comp_name):
         non_constant_attrs = [attr for attr in ruleset if ruleset[attr] not in ["constant", "random"]]
         comp_uni = comp["uniformity"]
@@ -664,20 +685,22 @@ def place_new_entity(comp, struct, ruleset, entity_to_copy=None, position=None, 
         
         for attr in entity_to_copy:
             if attr != "position":
-                new_entity[attr] = entity_to_copy[attr] if (attr in non_constant_attrs) or comp_uni else random.choice(range_of_values(attr))
+                new_entity[attr] = entity_to_copy[attr] if (attr in non_constant_attrs) or comp_uni else random.choice(range_of_values(attr, struct=struct, comp=comp_name, human=human))
     
         return new_entity
         
 # string dict int -> range
 # returns the range of possible values an *attr* can take in a given *struct*ure *comp*onent
 # ~tested~
-def range_of_values(attr, struct=None, comp="first_comp"):
+def range_of_values(attr, struct=None, comp="first_comp", human=False):
     if attr == "type":
         return list(range(3, 8))
     elif attr == "size":
         return list(range(0, 6))
-    elif attr == "color":
+    elif attr == "color" and not human:
         return list(range(0, 10))
+    elif attr == "color" and human:
+        return list(range(0, 6))
     elif attr == "angle":
         return list(range(-3, 5))
     elif attr == "number" or attr == "position":
@@ -714,17 +737,26 @@ def comps_look_same(one, two):
         return False
 
 
-def generate_answers(correct_answer, blueprint, fair=True):
+def generate_answers(correct_answer, blueprint, fair=True, human=False):
+
+    if human:
+        step_distrib = [0.5, 0.5]
+    else:
+        step_distrib = [1, 0]
+    
     answer_choices = [correct_answer]
     structure = correct_answer["structure"]
-
-    counter = 0
+    choice_to_modify = None
     while len(answer_choices) < 8:
-        if fair:
-            choice_to_modify = random.choice(answer_choices)
-        else:
-            choice_to_modify = correct_answer
-        
+        # if we are restarting the process of generating an answer
+        if choice_to_modify is None:
+            steps_to_take = random.choices([1, 2], weights=step_distrib, k=1)[0]
+
+            if fair:
+                choice_to_modify = random.choice(answer_choices)
+            else:
+                choice_to_modify = correct_answer
+
         new_choice = copy.deepcopy(choice_to_modify)
         comps = list(correct_answer.keys())
         comps.remove("structure")
@@ -745,20 +777,18 @@ def generate_answers(correct_answer, blueprint, fair=True):
             if "position" in possible_attrs: possible_attrs.remove("position")
             if "number" in possible_attrs: possible_attrs.remove("number")
         
-        print(possible_attrs)
         attr_to_modify = random.choice(possible_attrs)
-        # print(counter, attr_to_modify, comp_to_modify)
 
         if attr_to_modify in ["size", "type", "color"]:
             for i, entity in enumerate(comp["entities"]):
                 if not comp["uniformity"] or i == 0:
-                    vals = [val for val in range_of_values(attr_to_modify, structure, comp_to_modify) if val != entity[attr_to_modify]]
+                    vals = [val for val in range_of_values(attr_to_modify, structure, comp_to_modify, human) if val != entity[attr_to_modify]]
                     new_val = random.choice(vals)
 
                 entity[attr_to_modify] = new_val
 
         elif attr_to_modify in ["position", "number"]:
-            vals = [val for val in range_of_values("number", structure, comp_to_modify) if val != len(comp["entities"])]
+            vals = [val for val in range_of_values("number", structure, comp_to_modify, human) if val != len(comp["entities"])]
             new_val = random.choice(vals)
             
             if  attr_to_modify == "number":
@@ -767,7 +797,7 @@ def generate_answers(correct_answer, blueprint, fair=True):
                 comp["entities"] = []
 
                 while len(comp["entities"]) < new_val:
-                    comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy))
+                    comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy, human=human))
 
             if attr_to_modify == "position":
                 # print("modifying position")
@@ -778,9 +808,8 @@ def generate_answers(correct_answer, blueprint, fair=True):
 
                     elif len(comp["entities"]) < new_val:
                         entity_to_copy = comp["entities"][0]
-                        comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy))
+                        comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy, human=human))
         elif attr_to_modify == "uniformity":
-            print(counter, "modifying uniformity")
             comp["uniformity"] = not comp["uniformity"]
             entity_to_copy = comp["entities"][0]
 
@@ -788,18 +817,25 @@ def generate_answers(correct_answer, blueprint, fair=True):
             for entity in comp["entities"]:
                 pos = entity["position"]
                 remove_entity(comp, pos=pos)
-                comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy=entity_to_copy, position=pos))
+                comp["entities"].append(place_new_entity(comp, structure, ruleset, entity_to_copy=entity_to_copy, position=pos, human=human))
 
-        equality = False
-        for choice in answer_choices:
-            if panels_look_same(new_choice, choice):
-                equality = True
+        # if we've modified the starting panel enough times, then add it to the choice set
+        steps_to_take -= 1
+        if steps_to_take == 0:
+            equality = False
+            for choice in answer_choices:
+                if panels_look_same(new_choice, choice):
+                    equality = True
 
-        if not equality:
-            # print("added")
-            answer_choices.append(new_choice)
+            if not equality:
+                # print("added")
+                answer_choices.append(new_choice)
+            
+            choice_to_modify = None
+        else:
+            choice_to_modify = new_choice
+
         
-        counter += 1
     
     random.shuffle(answer_choices)
     target = answer_choices.index(correct_answer)
@@ -821,6 +857,12 @@ def make_square(struct, first_comp, second_comp=None):
 import json
 
 if __name__ == "__main__":
+    bp = generate_progression_set()
+    print(bp)
+
+    bp = generate_sameness_set()
+    print(bp)
+    """
     f = open("structures/blueprint.json")
     spec = json.load(f)
 
@@ -831,6 +873,8 @@ if __name__ == "__main__":
 
     blueprint = generate_random_blueprint()
     print(generate_initials(blueprint))
+    """
+
 
 # make sure to do the number and position ones first
 

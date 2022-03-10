@@ -1,7 +1,9 @@
 import unittest
 import copy
+import json
 
 import generate_custom as gc 
+from manual_main import convert_to_actual_colors, map_color 
 
 ent1 = {
     "position": 1,
@@ -115,6 +117,22 @@ ent14 = {
 
 
 class TestGenerateCustom(unittest.TestCase):
+
+    def test_map_color(self):
+        self.assertEqual(map_color(0), 0)
+        self.assertEqual(map_color(1), 1)
+        self.assertEqual(map_color(2), 3)
+        self.assertEqual(map_color(3), 5)
+        self.assertEqual(map_color(4), 7)
+        self.assertEqual(map_color(5), 9)
+    
+    def test_convert_to_actual_colors(self):
+        with open("prototypes/human_colors.json") as f:
+            human_colors = json.load(f)
+        with open("prototypes/converted_colors.json") as f:
+            converted_colors = json.load(f)
+
+        self.assertEqual(convert_to_actual_colors(human_colors), converted_colors)
 
     def test_eligible_values(self):
 

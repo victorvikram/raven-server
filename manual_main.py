@@ -19,13 +19,17 @@ from src.dataset.AoT import (Root, Structure, Component, Layout, Entity)
 from src.dataset.constraints import gen_entity_constraint, gen_layout_constraint
 from src.dataset.const import LINESIZE_DEFAULT, LINECOLOR_DEFAULT
 
+
 """
 None -> None
 
 Given a list of tiles to generate, generates each and shows them
 """
-def gen_specific(index, spec, save_dir):
-    
+def gen_specific(spec):
+
+    if spec["human"]:
+        spec = convert_to_actual_colors(spec)
+
     # load file with the square descriptions in json format
     if isinstance(spec, str):
         f = open(spec)
@@ -61,12 +65,24 @@ def gen_specific(index, spec, save_dir):
         plt.show()
         """
         
-    
-    """
-    if not os.path.isdir(save_dir):
-        os.mkdir(save_dir)
-    """
+
     return image, target
+
+def convert_to_actual_colors(spec):
+    for panel in spec["panels"]:
+        for entry in panel:
+            if entry in ["first_comp", "second_comp"]:
+                for entity in panel[entry]:
+                    entity["color"] = map_color(entity["color"])
+    
+    return spec
+
+
+def map_color(color_index):
+    if color_index == 0:
+        return 0
+    else:
+        return color_index * 2 - 1
 
 """
 dict -> Root
