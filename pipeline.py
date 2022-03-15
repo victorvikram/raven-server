@@ -85,6 +85,8 @@ def make_problems(blueprints):
         
         img = arr_to_img(arr)
         img.save(filename + ".jpg", format="JPEG")
+        with open(filename + ".json", "w") as f:
+            json.dump(literal, f, indent=4)
     
     return dirname
 
