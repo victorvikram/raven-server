@@ -171,7 +171,6 @@ def generate_attr_list(ruleset, intrinsic_attrs=False, implicit_attrs=False, non
         return_list = return_list.copy()
         for attr in pre_return_list:
             if ruleset[attr] == "constant_hide":
-                print("removing")
                 return_list.remove(attr)
     
     if ambig_attrs:
@@ -219,8 +218,9 @@ def impose_constraints(blueprint, constraint_class=None):
             blueprint[comp]["initials"]["position"] = 1
             blueprint[comp]["initials"]["number"] = 1
         else:
-            pos_or_number = random.choice(["number", "position"])
-            blueprint[comp][pos_or_number] = "NA"
+            if blueprint[comp]["position"] != "NA" and blueprint[comp]["number"] != "NA":
+                pos_or_number = random.choice(["number", "position"])
+                blueprint[comp][pos_or_number] = "NA"
         
         if structure in ["out_in", "out_in_grid"] and comp == "first_comp" and constraint_class != "outer_color":
             blueprint[comp]["color"] = "constant"
@@ -905,10 +905,12 @@ def range_of_values(attr, struct=None, comp="first_comp", human=False, ruleset=N
         return list(range(0, 6))
     elif attr == "color" and not human:
         return list(range(0, 10))
-    elif attr == "color" and human and not restrict_color:
-        return list(range(0, 6))
     elif attr == "color" and human and restrict_color:
         return list(range(0, 5))
+    elif attr == "color" and human and (comp == "first_comp" and struct in ["out_in", "out_in_grid"]):
+        return list(range(0, 5))
+    elif attr == "color" and human:
+        return list(range(0, 6))
     elif attr == "angle":
         return list(range(-3, 5))
     elif attr == "linecolor":
@@ -1059,7 +1061,6 @@ def generate_answers(correct_answer, blueprint, fair=True, human=False):
     # TODO need to make sure that all answers are wrong except the right one
 
     correct_answer_abstract = make_correct_answer_abstract(correct_answer, blueprint)
-    print(correct_answer_abstract)
 
     if human:
         step_distrib = [0, 1]
@@ -1092,8 +1093,6 @@ def generate_answers(correct_answer, blueprint, fair=True, human=False):
             possible_attrs = generate_attr_list(blueprint[comp_to_modify], intrinsic_attrs=True, nonhidden_attrs=True)
         elif structure in ["distribute_nine", "distribute_four", "out_in_grid"]:
             possible_attrs = generate_attr_list(blueprint[comp_to_modify], intrinsic_attrs=False, nonhidden_attrs=True, extras=["uniformity"])
-        
-        print(possible_attrs)
 
         if structure in ["out_in", "out_in_grid"] and comp_to_modify == "first_comp":
             if "color" in possible_attrs: possible_attrs.remove("color")
@@ -1102,7 +1101,6 @@ def generate_answers(correct_answer, blueprint, fair=True, human=False):
             if "number" in possible_attrs: possible_attrs.remove("number")
         
         attr_to_modify = random.choice(possible_attrs)
-        print(attr_to_modify)
         if attr_to_modify in generate_attr_list(blueprint[comp_to_modify], intrinsic_attrs=True):
             for i, entity in enumerate(comp["entities"]):
                 if not comp["uniformity"] or i == 0:
@@ -1135,7 +1133,6 @@ def generate_answers(correct_answer, blueprint, fair=True, human=False):
             elif attr_to_modify in ["position_row", "position_col"] and len(comp["entities"]) <= 3 :
                 row_or_col = attr_to_modify.split("_")[1]
                 val = get_row_or_col_index(comp["entities"][0]["position"], row_or_col)
-                print("VAL", val)
                 options = [0, 1, 2]
                 options.remove(val)
 

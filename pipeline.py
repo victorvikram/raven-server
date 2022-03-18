@@ -32,7 +32,6 @@ def generate_set(concept="base", level="all", count=100, genClass="base"):
         if concept == "constant" or concept == "progression":
             blueprint = conceptify_blueprint(blueprint, level=level, concept=concept, constraint_class=genClass)
         
-        print(blueprint)
         blueprints.append(blueprint)
         
     
@@ -50,7 +49,7 @@ def conceptify_blueprint(blueprint, level="all", concept="constant", constraint_
     comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
     for comp in comps:
         for attr in gc.generate_attr_list(blueprint[comp]):
-            if random.random() < prob and blueprint[comp][attr] != "NA":
+            if random.random() < prob and blueprint[comp][attr] not in ["NA", "constant_hide"]:
                 blueprint[comp][attr] = concept
 
     gc.decorate_relations(blueprint)
