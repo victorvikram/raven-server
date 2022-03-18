@@ -26,7 +26,6 @@ None -> None
 Given a list of tiles to generate, generates each and shows them
 """
 def gen_specific(spec):
-
     if spec["human"]:
         spec = convert_to_actual_colors(spec)
 

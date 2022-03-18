@@ -22,19 +22,23 @@ def generate_set(concept="base", level="all", count=100, genClass="base"):
             blueprint = gc.generate_row_or_col_blueprint()
         elif genClass == "linecolor":
             blueprint = gc.generate_linecolor_blueprint()
+        elif genClass == "linesize":
+            blueprint = gc.generate_linesize_blueprint()
         elif genClass == "base":
             blueprint = gc.generate_random_blueprint()
+        elif genClass == "outer_color":
+            blueprint = gc.generate_outer_color_blueprint()
         
         if concept == "constant" or concept == "progression":
-            blueprint = conceptify_blueprint(blueprint, level=level, concept=concept)
+            blueprint = conceptify_blueprint(blueprint, level=level, concept=concept, constraint_class=genClass)
         
-
-        blueprints.append(blueprint)
         print(blueprint)
+        blueprints.append(blueprint)
+        
     
     return make_problems(blueprints)
 
-def conceptify_blueprint(blueprint, level="all", concept="constant"):
+def conceptify_blueprint(blueprint, level="all", concept="constant", constraint_class=None):
     if level == "all":
         prob = 1
     elif level == "boost":
@@ -45,12 +49,12 @@ def conceptify_blueprint(blueprint, level="all", concept="constant"):
 
     comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
     for comp in comps:
-        for attr in blueprint[comp]:
-            if random.random() < prob and blueprint[comp][attr] not in "NA":
+        for attr in gc.generate_attr_list(blueprint[comp]):
+            if random.random() < prob and blueprint[comp][attr] != "NA":
                 blueprint[comp][attr] = concept
 
     gc.decorate_relations(blueprint)
-    gc.impose_constraints(blueprint)
+    gc.impose_constraints(blueprint, constraint_class=constraint_class)
     
     # make sure there is at least one realtion that matches the concept
     acc = gc.iterate_through_attrs(blueprint, lambda rel, acc : acc or (concept in rel), False)

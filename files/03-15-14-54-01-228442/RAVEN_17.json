@@ -1,0 +1,374 @@
+{
+    "target": 4,
+    "human": true,
+    "panels": [
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 4,
+                    "type": 6,
+                    "color": 0,
+                    "angle": -1
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 1,
+                    "type": 5,
+                    "color": 0,
+                    "angle": -3
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 5,
+                    "color": 0,
+                    "angle": -1
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 5,
+                    "type": 5,
+                    "color": 0,
+                    "angle": -3
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 2,
+                    "type": 4,
+                    "color": 0,
+                    "angle": -1
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 0,
+                    "type": 5,
+                    "color": 0,
+                    "angle": -3
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 6,
+                    "color": 0,
+                    "angle": 0
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 0,
+                    "type": 4,
+                    "color": 5,
+                    "angle": 1
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 2,
+                    "type": 5,
+                    "color": 0,
+                    "angle": 0
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 1,
+                    "type": 4,
+                    "color": 5,
+                    "angle": 1
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 1,
+                    "type": 4,
+                    "color": 0,
+                    "angle": 0
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 5,
+                    "type": 4,
+                    "color": 5,
+                    "angle": 1
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 5,
+                    "type": 5,
+                    "color": 0,
+                    "angle": 4
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 5,
+                    "type": 3,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 4,
+                    "type": 4,
+                    "color": 0,
+                    "angle": 4
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 1,
+                    "type": 3,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 3,
+                    "color": 0,
+                    "angle": -2
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 0,
+                    "type": 5,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 0,
+                    "type": 3,
+                    "color": 0,
+                    "angle": -3
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 5,
+                    "color": 7,
+                    "angle": -3
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 3,
+                    "color": 0,
+                    "angle": -2
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 6,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 3,
+                    "color": 0,
+                    "angle": -2
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 0,
+                    "type": 5,
+                    "color": 7,
+                    "angle": -3
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 3,
+                    "color": 0,
+                    "angle": 4
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 0,
+                    "type": 3,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 5,
+                    "type": 5,
+                    "color": 0,
+                    "angle": -2
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 2,
+                    "type": 4,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 3,
+                    "color": 0,
+                    "angle": -2
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 3,
+                    "type": 5,
+                    "color": 7,
+                    "angle": -3
+                }
+            ]
+        },
+        {
+            "structure": "out_in",
+            "first_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 5,
+                    "type": 3,
+                    "color": 0,
+                    "angle": -2
+                }
+            ],
+            "second_comp": [
+                {
+                    "position": 1,
+                    "number": 1,
+                    "size": 2,
+                    "type": 5,
+                    "color": 7,
+                    "angle": 2
+                }
+            ]
+        }
+    ]
+}

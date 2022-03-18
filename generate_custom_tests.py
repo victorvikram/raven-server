@@ -117,6 +117,804 @@ ent14 = {
 
 
 class TestGenerateCustom(unittest.TestCase):
+    def test_compare_to_abstract_answer(self):
+        correct_answer_0 = {
+            "first_comp": {"entities": [
+                            {
+                            "angle": 2,
+                            "color": 5,
+                            "position": 1,
+                            "size": 2,
+                            "type": 3
+                            }
+                        ]},
+            "second_comp": {"entities": [
+                            {
+                            "angle": -1,
+                            "color": 5,
+                            "position": 1,
+                            "size": 1,
+                            "type": 3
+                            }
+            ]},
+            "structure": "left_right"
+            }
+        
+        correct_answer_1 = {
+            "first_comp": {"entities": [
+                            {
+                            "angle": 2,
+                            "color": 5,
+                            "position": 1,
+                            "size": 2,
+                            "type": 3
+                            }
+                        ]},
+            "second_comp": {"entities": [
+                            {
+                            "angle": -4,
+                            "color": 5,
+                            "position": 1,
+                            "size": 1,
+                            "type": 3
+                            }
+            ]},
+            "structure": "left_right"
+            }
+        
+        incorrect_answer = {
+                    "first_comp": {"entities": [
+                        {
+                        "angle": 2,
+                        "color": 5,
+                        "position": 1,
+                        "size": 2,
+                        "type": 3
+                        }
+                    ]},
+                    "second_comp": {"entities": [
+                        {
+                        "angle": -1,
+                        "color": 3,
+                        "position": 1,
+                        "size": 1,
+                        "type": 3
+                        }
+                    ]},
+                    "structure": "left_right"
+                    }
+        
+        abstract_answer = {
+            "first_comp": {
+                "color": 5,
+                "type": 3,
+                "size": 2
+            },
+            "second_comp": {
+                "color": 5,
+                "type": 3,
+                "size": 1
+            }
+        }
+
+        blueprint = {
+            "first_comp": {
+                "color": "arithmetic_add",
+                "number": "constant",
+                "position": "constant",
+                "size": "consistent_union",
+                "type": "progression_-2"
+            },
+            "second_comp": {
+                "color": "consistent_union",
+                "number": "constant",
+                "position": "constant",
+                "size": "progression_-2",
+                "type": "consistent_union"
+            },
+            "structure": "left_right"
+            }
+
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_0, abstract_answer, blueprint))
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_1, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer, abstract_answer, blueprint))
+
+        abstract_answer = {'first_comp': {'color': 3, 'position_row': 0, 'size': 0, 'type': 4}}
+        correct_answer_0 = {
+                            "first_comp": {"entities": [
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 1,
+                                "size": 0,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                        }
+        correct_answer_1 = {
+                            "first_comp": {"entities": [
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 1,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 3,
+                                "size": 0,
+                                "type": 4
+                                },
+                            ]},
+                            "structure": "distribute_nine"
+                        }
+        incorrect_answer = {
+                            "first_comp": {"entities": [
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 1,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 5,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 2,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 3,
+                                "size": 0,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                        }
+        blueprint = {
+            "first_comp": {
+                "color": "constant",
+                "number": "NA",
+                "position": "NA",
+                "position_row": "progression_-1",
+                "size": "consistent_union",
+                "type": "constant"
+            },
+            "structure": "distribute_nine",
+            "uniformity": True
+        }
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_0, abstract_answer, blueprint))
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_1, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer, abstract_answer, blueprint))
+
+        abstract_answer = {'first_comp': {'entities': [{'position': 2, 'color': 4, 'size': 0, 'type': 7}, {'position': 1, 'color': 3, 'size': 0, 'type': 5}, {'position': 3, 'color': 0, 'size': 0, 'type': 4}]}}
+        correct_answer_0 = {
+                        "first_comp": {"entities": [
+                            {
+                            "angle": 3,
+                            "color": 3,
+                            "position": 1,
+                            "size": 0,
+                            "type": 5
+                            },
+                            {
+                            "angle": 3,
+                            "color": 4,
+                            "position": 2,
+                            "size": 0,
+                            "type": 7
+                            },
+                            {
+                            "angle": 1,
+                            "color": 0,
+                            "position": 3,
+                            "size": 0,
+                            "type": 4
+                            }
+                        ]},
+                        "structure": "distribute_four"
+                        }
+        
+        correct_answer_1 = {
+                        "first_comp": {"entities": [
+                            {
+                            "angle": 2,
+                            "color": 3,
+                            "position": 1,
+                            "size": 0,
+                            "type": 5
+                            },
+                            {
+                            "angle": 2,
+                            "color": 4,
+                            "position": 2,
+                            "size": 0,
+                            "type": 7
+                            },
+                            {
+                            "angle": 1,
+                            "color": 0,
+                            "position": 3,
+                            "size": 0,
+                            "type": 4
+                            }
+                        ]},
+                        "structure": "distribute_four"
+                        }
+        
+        incorrect_answer_0 = {
+                        "first_comp": {"entities": [
+                            {
+                            "angle": 2,
+                            "color": 3,
+                            "position": 1,
+                            "size": 0,
+                            "type": 5
+                            },
+                            {
+                            "angle": 2,
+                            "color": 4,
+                            "position": 2,
+                            "size": 0,
+                            "type": 7
+                            },
+                            {
+                            "angle": 1,
+                            "color": 0,
+                            "position": 4,
+                            "size": 0,
+                            "type": 4
+                            }
+                        ]},
+                        "structure": "distribute_four"
+                        }
+        incorrect_answer_1 = {
+                        "first_comp": {"entities": [
+                            {
+                            "angle": 2,
+                            "color": 3,
+                            "position": 3,
+                            "size": 0,
+                            "type": 5
+                            },
+                            {
+                            "angle": 2,
+                            "color": 4,
+                            "position": 2,
+                            "size": 0,
+                            "type": 7
+                            },
+                            {
+                            "angle": 1,
+                            "color": 0,
+                            "position": 1,
+                            "size": 0,
+                            "type": 4
+                            }
+                        ]},
+                        "structure": "distribute_four"
+                        }
+        incorrect_answer_2 = {
+                        "first_comp": {"entities": [
+                            {
+                            "angle": 2,
+                            "color": 3,
+                            "position": 1,
+                            "size": 0,
+                            "type": 5
+                            },
+                            {
+                            "angle": 2,
+                            "color": 4,
+                            "position": 2,
+                            "size": 0,
+                            "type": 7
+                            },
+                            {
+                            "angle": 1,
+                            "color": 0,
+                            "position": 3,
+                            "size": 0,
+                            "type": 4
+                            },
+                            {
+                            "angle": 1,
+                            "color": 0,
+                            "position": 4,
+                            "size": 0,
+                            "type": 4
+                            }
+                        ]},
+                        "structure": "distribute_four"
+                        }
+        blueprint = {
+                "first_comp": {
+                    "color": "consistent_union",
+                    "number": "NA",
+                    "position": "constant",
+                    "size": "progression_1",
+                    "type": "constant"
+                },
+                "structure": "distribute_four",
+                "uniformity": True
+                }
+        
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_0, abstract_answer, blueprint))
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_1, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer_0, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer_1, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer_2, abstract_answer, blueprint))
+
+        abstract_answer = {'first_comp': {'number': 6, 'size': 0}}
+        correct_answer_0 =  {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 0,
+                                "position": 2,
+                                "size": 0,
+                                "type": 3
+                                },
+                                {
+                                "angle": -1,
+                                "color": 0,
+                                "position": 4,
+                                "size": 0,
+                                "type": 5
+                                },
+                                {
+                                "angle": -3,
+                                "color": 0,
+                                "position": 5,
+                                "size": 0,
+                                "type": 6
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "position": 6,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 1,
+                                "position": 8,
+                                "size": 0,
+                                "type": 7
+                                },
+                                {
+                                "angle": 2,
+                                "color": 1,
+                                "position": 9,
+                                "size": 0,
+                                "type": 3
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        correct_answer_1 = {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 3,
+                                "position": 2,
+                                "size": 0,
+                                "type": 3
+                                },
+                                {
+                                "angle": -1,
+                                "color": 5,
+                                "position": 4,
+                                "size": 0,
+                                "type": 5
+                                },
+                                {
+                                "angle": -3,
+                                "color": 1,
+                                "position": 3,
+                                "size": 0,
+                                "type": 7
+                                },
+                                {
+                                "angle": -2,
+                                "color": 2,
+                                "position": 7,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 1,
+                                "position": 8,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 1,
+                                "position": 9,
+                                "size": 0,
+                                "type": 3
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        incorrect_answer = {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 3,
+                                "position": 2,
+                                "size": 0,
+                                "type": 3
+                                },
+                                {
+                                "angle": -1,
+                                "color": 5,
+                                "position": 4,
+                                "size": 0,
+                                "type": 5
+                                },
+                                {
+                                "angle": -3,
+                                "color": 1,
+                                "position": 3,
+                                "size": 0,
+                                "type": 7
+                                },
+                                {
+                                "angle": -2,
+                                "color": 2,
+                                "position": 7,
+                                "size": 0,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 1,
+                                "position": 9,
+                                "size": 0,
+                                "type": 3
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        blueprint = {
+                    "first_comp": {
+                        "color": "constant",
+                        "number": "progression_2",
+                        "position": "NA",
+                        "size": "consistent_union",
+                        "type": "constant"
+                    },
+                    "structure": "distribute_nine",
+                    }
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_0, abstract_answer, blueprint))
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_1, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer, abstract_answer, blueprint))
+
+        abstract_answer = {'first_comp': {'color': 3, 'linesize': 1, 'linecolor': 2, 'size': 4, 'type': 4, "number": 6}}
+        correct_answer_0 =  {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 4,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 2,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": -1,
+                                "color": 3,
+                                "linecolor": 1,
+                                "linesize": 1,
+                                "position": 4,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": -3,
+                                "color": 2,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 5,
+                                "size": 5,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "linecolor": 3,
+                                "linesize": 1,
+                                "position": 6,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 2,
+                                "linesize": 0,
+                                "position": 8,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 3,
+                                "linecolor": 3,
+                                "linesize": 2,
+                                "position": 9,
+                                "size": 3,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        correct_answer_1 =  {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 3,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 2,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": -1,
+                                "color": 3,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 4,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": -3,
+                                "color": 3,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 5,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 3,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 6,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 3,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 8,
+                                "size": 4,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 3,
+                                "linecolor": 2,
+                                "linesize": 1,
+                                "position": 9,
+                                "size": 4,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        correct_answer_2 =  {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 2,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -1,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 4,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -3,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 5,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 6,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 8,
+                                "size": 5,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 9,
+                                "size": 5,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        incorrect_answer_0 =  {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 2,
+                                "size": 3,
+                                "type": 3
+                                },
+                                {
+                                "angle": -1,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 4,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -3,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 5,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 6,
+                                "size": 3,
+                                "type": 5
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 8,
+                                "size": 5,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 9,
+                                "size": 5,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+        incorrect_answer_1 =  {"first_comp": {"entities": [
+                                {
+                                "angle": 4,
+                                "color": 5,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 2,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -1,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 4,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -3,
+                                "color": 2,
+                                "linecolor": 1,
+                                "linesize": 2,
+                                "position": 5,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": -2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 6,
+                                "size": 3,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 3,
+                                "linesize": 0,
+                                "position": 8,
+                                "size": 5,
+                                "type": 4
+                                },
+                                {
+                                "angle": 2,
+                                "color": 4,
+                                "linecolor": 4,
+                                "linesize": 0,
+                                "position": 9,
+                                "size": 5,
+                                "type": 4
+                                }
+                            ]},
+                            "structure": "distribute_nine"
+                            }
+            
+        blueprint = {
+                    "first_comp": {
+                        "color": "constant",
+                        "number": "progression_2",
+                        "position": "NA",
+                        "linesize": "progression_1",
+                        "linecolor": "consistent_union",
+                        "size": "consistent_union",
+                        "type": "constant!"
+                    },
+                    "structure": "distribute_nine",
+                    }
+
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_0, abstract_answer, blueprint))
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_1, abstract_answer, blueprint))
+        self.assertTrue(gc.compare_to_abstract_answer(correct_answer_2, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer_0, abstract_answer, blueprint))
+        self.assertFalse(gc.compare_to_abstract_answer(incorrect_answer_1, abstract_answer, blueprint))            
+
 
     def test_map_color(self):
         self.assertEqual(map_color(0), 0)
