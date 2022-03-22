@@ -17,7 +17,8 @@ def generate_sameness_set(level="all", count=100):
 def generate_set(concept="base", level="all", count=100, genClass="base"):
     blueprints = []
     for i in range(count):
-
+        
+        last_blueprint = None
         if genClass == "position_row_col":
             blueprint = gc.generate_row_or_col_blueprint()
         elif genClass == "linecolor":
@@ -28,11 +29,13 @@ def generate_set(concept="base", level="all", count=100, genClass="base"):
             blueprint = gc.generate_random_blueprint()
         elif genClass == "outer_color":
             blueprint = gc.generate_outer_color_blueprint()
+        elif genClass == "slippage":
+            blueprint, last_blueprint = gc.generate_slippage_blueprint()
         
-        if concept == "constant" or concept == "progression":
+        if (concept == "constant" or concept == "progression") and level != "none":
             blueprint = conceptify_blueprint(blueprint, level=level, concept=concept, constraint_class=genClass)
         
-        blueprints.append(blueprint)
+        blueprints.append((blueprint, last_blueprint))
         
     
     return make_problems(blueprints)
@@ -74,9 +77,12 @@ def make_problems(blueprints):
     dirname = os.path.join("files", current_time)
     os.mkdir(dirname)
     
-    for i, blueprint in enumerate(blueprints):
-        initial = gc.generate_initials(blueprint, human=True)
-        literal = gc.generate_concrete_json(blueprint, initial, human=True)
+    for i, blueprint_pair in enumerate(blueprints):
+        blueprint = blueprint_pair[0]
+        last_blueprint = blueprint_pair[1]
+
+        initial = gc.generate_initials(blueprint, human=True, last_blueprint=last_blueprint)
+        literal = gc.generate_concrete_json(blueprint, initial, human=True, last_blueprint=last_blueprint)
         literal["human"] = True
 
         arr, target = mm.gen_specific(literal)

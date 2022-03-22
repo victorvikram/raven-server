@@ -72,6 +72,40 @@ import copy
 import random
 import numpy as np
 
+def generate_slippage_blueprint():
+    blueprint_base = generate_random_blueprint(structure_list=["center_single", "distribute_four", "distribute_nine", "left_right", "up_down", "out_in", "out_in_grid"],
+                                                attr_list=["position", "number", "size", "type", "color"], constraint_class="constant")
+
+    print(blueprint_base)
+    comps = ["first_comp", "second_comp"] if "second_comp" in blueprint_base else ["first_comp"] 
+
+    bp1 = copy.deepcopy(blueprint_base)
+    bp2 = copy.deepcopy(blueprint_base)
+    for comp in comps:                            
+        intrinsic_attrs = blueprint_base["structure"] in gen_structures(const_position=True) or (blueprint_base["structure"] == "out_in_grid" and comp == "first_comp")
+        const_color = blueprint_base["structure"] in ["out_in", "out_in_grid"] and comp == "first_comp"
+
+        attr_list = generate_attr_list(blueprint_base[comp], intrinsic_attrs=intrinsic_attrs)
+        attr_list = [attr for attr in attr_list if blueprint_base[comp][attr] != "NA" and not (const_color and attr == "color")]
+
+        
+        first_non_constant = random.choice(attr_list)
+        attr_list.remove(first_non_constant)
+        second_non_constant = random.choice(attr_list)
+
+        bp1[comp][first_non_constant] = "progression"
+        decorate_relations(bp1)
+        bp2[comp][second_non_constant] = bp1[comp][first_non_constant]
+    
+
+    impose_constraints(bp1)
+    impose_constraints(bp2)
+    print(json.dumps(bp1, indent=4))
+    print(json.dumps(bp2, indent=4))
+
+    return bp1, bp2
+
+
 def generate_outer_color_blueprint():
     blueprint = generate_random_blueprint(structure_list=["out_in", "out_in_grid"],
                                             attr_list=["position", "number", "size", "type", "color"], constraint_class="outer_color")
@@ -92,7 +126,7 @@ def generate_linecolor_blueprint():
     return blueprint
 
 def generate_linesize_blueprint():
-    blueprint = generate_random_blueprint(structure_list=["center_single", "left_right", "up_down"],
+    blueprint = generate_random_blueprint(structure_list=gen_structures(large_objects=True),
                                             attr_list=["position", "number", "size", "type", "color", "linecolor", "linesize"])
     
     comp_names = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
@@ -148,7 +182,7 @@ def iterate_through_attrs(blueprint, func, acc):
     
     return acc
 
-def generate_attr_list(ruleset, intrinsic_attrs=False, implicit_attrs=False, nonhidden_attrs=False, ambig_attrs=False, extras=[]):
+def generate_attr_list(ruleset, intrinsic_attrs=False, implicit_attrs=False, nonhidden_attrs=False, ambig_attrs=False, non_const_attrs=False, extras=[]):
     tentative_list = list(ruleset.keys())
     
     if "initials" in tentative_list:
@@ -165,7 +199,7 @@ def generate_attr_list(ruleset, intrinsic_attrs=False, implicit_attrs=False, non
             if attr in ["position_row", "position_col", "number"]:
                 return_list.append(attr)
     
-    
+
     if nonhidden_attrs:
         pre_return_list = return_list
         return_list = return_list.copy()
@@ -179,6 +213,12 @@ def generate_attr_list(ruleset, intrinsic_attrs=False, implicit_attrs=False, non
         for attr in pre_return_list:
             if attr in ["linecolor", "linesize", "color", "size"]:
                 return_list.append(attr)
+    
+    if non_const_attrs:
+        pre_return_list = return_list
+        for attr in pre_return_list:
+            if ruleset[attr] in ["constant", "constant!", "NA"]:
+                pre_return_list.remove(attr)
     
     return return_list + extras
 
@@ -198,21 +238,30 @@ def decorate_relations(blueprint):
             elif blueprint[comp][attr] == "arithmetic":
                 direction = random.choice(["add", "sub"])
                 blueprint[comp][attr] = "arithmetic_" + direction
+
+def gen_structures(large_objects=False, const_position=False):
+    full_list = ["center_single", "distribute_four", "distribute_nine", "left_right", "up_down", "out_in", "out_in_grid"]
+
+    if large_objects:
+        full_list = [struct for struct in full_list if struct not in ["distribute_nine", "out_in", "out_in_grid"]]
     
+    if const_position:
+        full_list = [struct for struct in full_list if struct in ["center_single", "left_right", "up_down", "out_in"]]
+    
+    return full_list
+
+
 # string string dict ->
 # modifies *blueprint* so that it satisfies constraints on what kinds of relations are permissible on what attributes
 def impose_constraints(blueprint, constraint_class=None):
     structure = blueprint["structure"]
-
-    
-
     comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
 
     for comp in comps:
         if "initials" not in blueprint[comp]:
             blueprint[comp]["initials"] = {}
 
-        if structure in ["center_single",  "left_right", "up_down", "out_in"] or (structure == "out_in_grid" and comp == "first_comp"):
+        if structure in gen_structures(const_position=True) or (structure == "out_in_grid" and comp == "first_comp"):
             blueprint[comp]["position"] = "constant"
             blueprint[comp]["number"] = "constant"
             blueprint[comp]["initials"]["position"] = 1
@@ -236,6 +285,12 @@ def impose_constraints(blueprint, constraint_class=None):
             new_relation = random.choice(["constant", "progression", "consistent_union"])
             blueprint[comp]["type"] = new_relation
             decorate_relations(blueprint)
+        
+        if constraint_class == "constant":
+            non_const_attrs = generate_attr_list(blueprint[comp], non_const_attrs=True)
+            for attr in non_const_attrs:
+                blueprint[comp][attr] = "constant"
+
 
 def sample_posns(structure, comp, pos_attr="position", rel="", ind=None):
     if pos_attr in ["position_row", "position_col"]:
@@ -251,7 +306,10 @@ def sample_posns(structure, comp, pos_attr="position", rel="", ind=None):
     posns.sort()
     return tuple(posns)
 
-def generate_initials(blueprint, human=False):
+def generate_initials(blueprint, human=False, last_blueprint=None):
+    if last_blueprint is None:
+        last_blueprint = blueprint
+    
     structure = blueprint["structure"]
     components = ["first_comp"] if blueprint["structure"] in ["center_single", "distribute_four", "distribute_nine"] else ["first_comp", "second_comp"]
 
@@ -259,6 +317,9 @@ def generate_initials(blueprint, human=False):
 
     initials = []
     for i in range(3):
+        if i == 2:
+            blueprint = last_blueprint
+        
         if "uniformity" in blueprint:
             uniformity = blueprint["uniformity"]
         else:
@@ -395,9 +456,11 @@ def eligible_values(structure, comp, attr, rel="", used_vals=None, human=False, 
 # takes a problem *blueprint* (a structure and what the rules are for each component) and (optionally) *initial*
 # values. then it returns a concrete json file--one that explicitly lays out all the entities and their attributes.
 # if no initial values are given, it generates them randomly. 
-def generate_concrete_json(blueprint, initial=None, human=False):
+def generate_concrete_json(blueprint, initial=None, human=False, last_blueprint=None):
     # TODO: checks to see if the input satisfies the constraints
-
+    if last_blueprint is None:
+        last_blueprint = blueprint
+    
     squares = [[None for i in range(3)] for j in range(3)]
 
     for i in range(3):
@@ -412,7 +475,7 @@ def generate_concrete_json(blueprint, initial=None, human=False):
 
     squares[0][1], squares[0][2] = complete_row(squares[0][0], blueprint, consistent_union_vals, human=human)
     squares[1][1], squares[1][2] = complete_row(squares[1][0], blueprint, consistent_union_vals, human=human)
-    squares[2][1], squares[2][2] = complete_row(squares[2][0], blueprint, consistent_union_vals, human=human)
+    squares[2][1], squares[2][2] = complete_row(squares[2][0], last_blueprint, consistent_union_vals, human=human)
     
     answers, target = generate_answers(squares[2][2], blueprint, human=human)
 
@@ -1191,7 +1254,9 @@ def make_square(struct, first_comp, second_comp=None):
 import json
 
 if __name__ == "__main__":
-    bp = generate_row_or_col_blueprint()
+    bp = generate_slippage_blueprint()
+    print(json.dumps(bp[0], indent=4))
+    print(json.dumps(bp[1], indent=4))
 
     """
     f = open("structures/blueprint.json")
