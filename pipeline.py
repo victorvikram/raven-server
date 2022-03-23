@@ -31,6 +31,8 @@ def generate_set(concept="base", level="all", count=100, genClass="base"):
             blueprint = gc.generate_outer_color_blueprint()
         elif genClass == "slippage":
             blueprint, last_blueprint = gc.generate_slippage_blueprint()
+        elif genClass == "switch_comps":
+            blueprint = gc.generate_switcheroo_blueprint()
         
         if (concept == "constant" or concept == "progression") and level != "none":
             blueprint = conceptify_blueprint(blueprint, level=level, concept=concept, constraint_class=genClass)
@@ -38,7 +40,7 @@ def generate_set(concept="base", level="all", count=100, genClass="base"):
         blueprints.append((blueprint, last_blueprint))
         
     
-    return make_problems(blueprints)
+    return make_problems(blueprints, comp_symmetry=(genClass == "switch_comps"))
 
 def conceptify_blueprint(blueprint, level="all", concept="constant", constraint_class=None):
     if level == "all":
@@ -70,7 +72,7 @@ def conceptify_blueprint(blueprint, level="all", concept="constant", constraint_
     return blueprint
 
 
-def make_problems(blueprints):
+def make_problems(blueprints, comp_symmetry=False):
     now = datetime.now()
     current_time = now.strftime("%m-%d-%H-%M-%S-%f")
     
@@ -82,7 +84,7 @@ def make_problems(blueprints):
         last_blueprint = blueprint_pair[1]
 
         initial = gc.generate_initials(blueprint, human=True, last_blueprint=last_blueprint)
-        literal = gc.generate_concrete_json(blueprint, initial, human=True, last_blueprint=last_blueprint)
+        literal = gc.generate_concrete_json(blueprint, initial, human=True, last_blueprint=last_blueprint, comp_symmetry=comp_symmetry)
         literal["human"] = True
 
         arr, target = mm.gen_specific(literal)

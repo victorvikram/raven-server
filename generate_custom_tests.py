@@ -934,7 +934,7 @@ class TestGenerateCustom(unittest.TestCase):
 
     def test_eligible_values(self):
 
-        self.assertEqual(gc.eligible_values("out_in", "first_comp", "color", "constant"), [0])
+        self.assertEqual(gc.eligible_values("out_in", "first_comp", "color", "constant"), list(range(10)))
         self.assertEqual(gc.eligible_values("out_in_grid", "first_comp", "number", "constant"), [1])
         self.assertEqual(gc.eligible_values("center_single", "first_comp", "position", "constant"), [1])
         self.assertEqual(gc.eligible_values("left_right", "second_comp", "position", "constant"), [1])

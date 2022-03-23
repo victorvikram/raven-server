@@ -72,6 +72,32 @@ import copy
 import random
 import numpy as np
 
+def generate_switcheroo_blueprint(human=True):
+    blueprint = generate_random_blueprint(structure_list=["left_right", "up_down"])
+    comps = ["first_comp", "second_comp"]
+
+    attrs = generate_attr_list(blueprint["first_comp"], intrinsic_attrs=True)
+    defining_attr = random.choice(attrs)
+    print(defining_attr)
+    possible_vals = range_of_values(defining_attr, struct=blueprint["structure"], comp="first_comp", human=human)
+    chosen_vals = random.sample(possible_vals, 2)
+    while defining_attr in ["size", "color"] and abs(chosen_vals[0] - chosen_vals[1]) <= 2:
+        chosen_vals = random.sample(possible_vals, 2)
+
+    for i, comp in enumerate(comps):
+        blueprint[comp][defining_attr] = "constant"
+        blueprint[comp]["initials"][defining_attr] = chosen_vals[i]
+
+        for attr in attrs:
+            if attr != defining_attr:
+                blueprint[comp][attr] = random.choice(["progression", "arithmetic", "consistent_union"])
+    
+    decorate_relations(blueprint)
+    impose_constraints(blueprint)
+        
+    return blueprint
+
+
 def generate_slippage_blueprint():
     blueprint_base = generate_random_blueprint(structure_list=["center_single", "distribute_four", "distribute_nine", "left_right", "up_down", "out_in", "out_in_grid"],
                                                 attr_list=["position", "number", "size", "type", "color"], constraint_class="constant")
@@ -250,6 +276,17 @@ def gen_structures(large_objects=False, const_position=False):
     
     return full_list
 
+def switch_up_literal(literal):
+    panels = literal["panels"]
+
+    for panel in panels:
+        switch = random.choice([True, False])
+        if switch:
+            first_comp = panel["first_comp"]
+            second_comp = panel["second_comp"]
+
+            panel["first_comp"] = second_comp
+            panel["second_comp"] = first_comp
 
 # string string dict ->
 # modifies *blueprint* so that it satisfies constraints on what kinds of relations are permissible on what attributes
@@ -456,7 +493,7 @@ def eligible_values(structure, comp, attr, rel="", used_vals=None, human=False, 
 # takes a problem *blueprint* (a structure and what the rules are for each component) and (optionally) *initial*
 # values. then it returns a concrete json file--one that explicitly lays out all the entities and their attributes.
 # if no initial values are given, it generates them randomly. 
-def generate_concrete_json(blueprint, initial=None, human=False, last_blueprint=None):
+def generate_concrete_json(blueprint, initial=None, human=False, last_blueprint=None, comp_symmetry=False):
     # TODO: checks to see if the input satisfies the constraints
     if last_blueprint is None:
         last_blueprint = blueprint
@@ -477,9 +514,13 @@ def generate_concrete_json(blueprint, initial=None, human=False, last_blueprint=
     squares[1][1], squares[1][2] = complete_row(squares[1][0], blueprint, consistent_union_vals, human=human)
     squares[2][1], squares[2][2] = complete_row(squares[2][0], last_blueprint, consistent_union_vals, human=human)
     
-    answers, target = generate_answers(squares[2][2], blueprint, human=human)
+    answers, target = generate_answers(squares[2][2], blueprint, human=human, comp_symmetry=comp_symmetry)
+    literal = flatten(squares, answers, blueprint, target, human)
+    
+    if comp_symmetry:
+        switch_up_literal(literal)
 
-    return flatten(squares, answers, blueprint, target, human)
+    return literal
 
 def modify_square(square):
     square["first_comp"]["entities"].sort(key=(lambda elt : elt["position"]))
@@ -1081,47 +1122,59 @@ def attr_equality(val_1, val_2, attr, ambig_attrs):
         return abs(val_1 - val_2) < 2
     else:
         return val_1 == val_2
-    
 
-def compare_to_abstract_answer(candidate, abstract_answer, blueprint, human=True):
+def compare_comps(cand, cand_comp, abst, abst_comp, blueprint):
+    attr_list = generate_attr_list(blueprint[cand_comp])
+    implicit_attrs = generate_attr_list(blueprint[cand_comp], implicit_attrs=True)
+    ambig_attrs = generate_attr_list(blueprint[cand_comp], ambig_attrs=True)
+    comp = cand[cand_comp]
+    abstract_comp = abst[abst_comp]
+
+    matches = True
+    for attr in attr_list:
+        if attr in abstract_comp:
+            if attr in implicit_attrs:
+                matches = matches and attr_equality(abstract_comp[attr], get_panel_value(attr, comp), attr, ambig_attrs)
+            else:
+                for ent in comp["entities"]:
+                    matches = matches and attr_equality(abstract_comp[attr], ent[attr], attr, ambig_attrs)
+        elif "entities" in abstract_comp and attr in abstract_comp["entities"][0]:
+            
+            if len(abstract_comp["entities"]) != len(comp["entities"]):
+                matches = False
+            else:
+                for ent in abstract_comp["entities"]:
+                    corresp_ent = get_entity(comp, ent["position"])
+                    
+                    # the case where the answer choice has an ent in a position not in the abstract structure
+                    if corresp_ent is None:
+                        matches = False 
+                    else:
+                        matches = matches and attr_equality(corresp_ent[attr], ent[attr], attr, ambig_attrs)
+    
+    return matches
+
+
+def compare_to_abstract_answer(candidate, abstract_answer, blueprint, human=True, comp_symmetry=False):
     comp_names = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
 
     matches = True
     for comp_name in comp_names:
-        attr_list = generate_attr_list(blueprint[comp_name])
-        implicit_attrs = generate_attr_list(blueprint[comp_name], implicit_attrs=True)
-        ambig_attrs = generate_attr_list(blueprint[comp_name], ambig_attrs=True)
-        comp = candidate[comp_name]
-        abstract_comp = abstract_answer[comp_name]
+        matches = matches and compare_comps(candidate, comp_name, abstract_answer, comp_name, blueprint)
 
-        for attr in attr_list:
-            if attr in abstract_comp:
-                if attr in implicit_attrs:
-                    matches = matches and attr_equality(abstract_comp[attr], get_panel_value(attr, comp), attr, ambig_attrs)
-                else:
-                    for ent in comp["entities"]:
-                        matches = matches and attr_equality(abstract_comp[attr], ent[attr], attr, ambig_attrs)
-            elif "entities" in abstract_comp and attr in abstract_comp["entities"][0]:
-                
-                if len(abstract_comp["entities"]) != len(comp["entities"]):
-                    matches = False
-                else:
-                    for ent in abstract_comp["entities"]:
-                        corresp_ent = get_entity(comp, ent["position"])
-                        
-                        # the case where the answer choice has an ent in a position not in the abstract structure
-                        if corresp_ent is None:
-                            matches = False 
-                        else:
-                            matches = matches and attr_equality(corresp_ent[attr], ent[attr], attr, ambig_attrs)
-    
+    swap_matches = True
+    if comp_symmetry:
+        swap_matches = swap_matches and compare_comps(candidate, "first_comp", abstract_answer, "second_comp", blueprint)
+        swap_matches = swap_matches and compare_comps(candidate, "second_comp", abstract_answer, "first_comp", blueprint)
+
+    final_matches = matches or (swap_matches and comp_symmetry)
+
     return matches
 
 
 
 
-def generate_answers(correct_answer, blueprint, fair=True, human=False):
-    # TODO need to make sure that all answers are wrong except the right one
+def generate_answers(correct_answer, blueprint, fair=True, human=False, comp_symmetry=False):
 
     correct_answer_abstract = make_correct_answer_abstract(correct_answer, blueprint)
 
@@ -1219,7 +1272,7 @@ def generate_answers(correct_answer, blueprint, fair=True, human=False):
         if steps_to_take == 0:
             equality = False
 
-            if compare_to_abstract_answer(new_choice, correct_answer_abstract, blueprint):
+            if compare_to_abstract_answer(new_choice, correct_answer_abstract, blueprint, comp_symmetry=comp_symmetry):
                 equality = True
             for choice in answer_choices:
                 if panels_look_same(new_choice, choice):
@@ -1254,9 +1307,8 @@ def make_square(struct, first_comp, second_comp=None):
 import json
 
 if __name__ == "__main__":
-    bp = generate_slippage_blueprint()
-    print(json.dumps(bp[0], indent=4))
-    print(json.dumps(bp[1], indent=4))
+    bp = generate_switcheroo_blueprint()
+    print(json.dumps(bp, indent=4))
 
     """
     f = open("structures/blueprint.json")
