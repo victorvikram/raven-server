@@ -146,7 +146,7 @@ def construct_array(images, rows, cols, answers=False):
             place_at_coords(full_image, img, cushion, vert_cushion, row, col)
             
             
-            number = char_to_pixels(str(index + 1), "C:\\Windows\\Fonts\\cour.ttf")
+            number = char_to_pixels(str(index + 1), "/res/cour.ttf")
             
             box = np.zeros((cushion*4, cushion*4))
             box[box.shape[0] - number.shape[0]:, box.shape[1] - number.shape[1]:box.shape[1]] = number
