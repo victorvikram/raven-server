@@ -13,6 +13,7 @@ import sys
 import os
 import shutil
 import numpy as np
+import json
 
 """
 to start the server on powershell
@@ -39,7 +40,10 @@ def literal():
 
 @app.route("/image", methods=["POST"])
 def image():
+    print("in function")
     spec = request.get_json()
+    print("didnt get json")
+    print(json.dumps(spec, indent=4))
     img, tar = gen_specific(spec)
     img = arr_to_img(img)
 
@@ -52,16 +56,21 @@ def file():
 
     return serve_npz(img, tar)
 
-@app.route("/blueprint", methods=["GET"])
+@app.route("/blueprint", methods=["POST"])
 def blueprint():
-    return generate_random_blueprint()
+    body = request.get_json()
+    struct = body["structure"]
+    if struct == "any":
+        return generate_random_blueprint()
+    else:
+        return generate_random_blueprint(structure_list=[struct])
 
 @app.route("/createset", methods=["POST"])
 def createset():
     body = request.get_json()
     print(body)
 
-    dirname = generate_set(count=body["count"], concept=body["concept"], level=body["mag"], genClass=body["genClass"])
+    dirname = generate_set(count=body["count"], concept=body["concept"], level=body["mag"], genClass=body["genClass"], structure=body["structure"], only_concept=body["onlyConcept"])
 
     zipname = os.path.join("files", f"{body['concept']}_problems.zip")
     with ZipFile(zipname, "w") as zipObj:

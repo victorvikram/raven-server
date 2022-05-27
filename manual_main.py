@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import json
 import os
 import sys
+import copy
 import argparse
 from tempfile import TemporaryFile
 
@@ -68,6 +69,7 @@ def gen_specific(spec):
     return image, target
 
 def convert_to_actual_colors(spec):
+    spec = copy.deepcopy(spec)
     for panel in spec["panels"]:
         for entry in panel:
             if entry in ["first_comp", "second_comp"]:

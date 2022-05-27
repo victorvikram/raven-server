@@ -72,8 +72,12 @@ import copy
 import random
 import numpy as np
 
-def generate_switcheroo_blueprint(human=True):
-    blueprint = generate_random_blueprint(structure_list=["left_right", "up_down"])
+def generate_switcheroo_blueprint(structure="any", human=True):
+    structure_list = ["left_right", "up_down"]
+    if structure != "any" and structure in structure_list:
+        structure_list = [structure]
+
+    blueprint = generate_random_blueprint(structure_list=structure_list)
     comps = ["first_comp", "second_comp"]
 
     attrs = generate_attr_list(blueprint["first_comp"], intrinsic_attrs=True)
@@ -98,11 +102,14 @@ def generate_switcheroo_blueprint(human=True):
     return blueprint
 
 
-def generate_slippage_blueprint():
-    blueprint_base = generate_random_blueprint(structure_list=["center_single", "distribute_four", "distribute_nine", "left_right", "up_down", "out_in", "out_in_grid"],
+def generate_slippage_blueprint(structure="any"):
+    # print(structure)
+    structure_list = ["center_single", "distribute_four", "distribute_nine", "left_right", "up_down", "out_in", "out_in_grid"]
+    if structure != "any" and structure in structure_list:
+        structure_list = [structure]
+    blueprint_base = generate_random_blueprint(structure_list=structure_list,
                                                 attr_list=["position", "number", "size", "type", "color"], constraint_class="constant")
 
-    print(blueprint_base)
     comps = ["first_comp", "second_comp"] if "second_comp" in blueprint_base else ["first_comp"] 
 
     bp1 = copy.deepcopy(blueprint_base)
@@ -126,19 +133,25 @@ def generate_slippage_blueprint():
 
     impose_constraints(bp1)
     impose_constraints(bp2)
-    print(json.dumps(bp1, indent=4))
-    print(json.dumps(bp2, indent=4))
 
     return bp1, bp2
 
 
 def generate_outer_color_blueprint():
-    blueprint = generate_random_blueprint(structure_list=["out_in", "out_in_grid"],
+    structure_list = ["out_in", "out_in_grid"]
+    if structure != "any" and structure in structure_list:
+        structure_list = [structure]
+
+    blueprint = generate_random_blueprint(structure_list=structure_list,
                                             attr_list=["position", "number", "size", "type", "color"], constraint_class="outer_color")
     return blueprint
     
-def generate_linecolor_blueprint():
-    blueprint = generate_random_blueprint(structure_list=["center_single", "left_right", "up_down"],
+def generate_linecolor_blueprint(structure="any"):
+    structure_list = ["center_single", "left_right", "up_down"]
+    if structure != "any" and structure in structure_list:
+        structure_list = [structure]
+
+    blueprint = generate_random_blueprint(structure_list=structure_list,
                                             attr_list=["position", "number", "size", "type", "color", "linecolor"])
     
     comps = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
@@ -146,13 +159,17 @@ def generate_linecolor_blueprint():
     for comp in comps:
         blueprint[comp]["color"] = "constant_hide"
         blueprint[comp]["linesize"] = "constant_hide"
-        blueprint[comp]["initials"] = {}
+        blueprint[comp]["initials"] = {"color": 0}
         blueprint[comp]["initials"]["linesize"] = 4
     
     return blueprint
 
 def generate_linesize_blueprint():
-    blueprint = generate_random_blueprint(structure_list=gen_structures(large_objects=True),
+    structure_list = gen_structures(large_objects=True)
+    if structure != "any" and structure in structure_list:
+        structure_list = [structure]
+
+    blueprint = generate_random_blueprint(structure_list=structure_list,
                                             attr_list=["position", "number", "size", "type", "color", "linecolor", "linesize"])
     
     comp_names = ["first_comp", "second_comp"] if "second_comp" in blueprint else ["first_comp"]
@@ -165,7 +182,7 @@ def generate_linesize_blueprint():
     return blueprint
 
 
-def generate_row_or_col_blueprint():
+def generate_row_or_col_blueprint(structure=None):
     blueprint = generate_random_blueprint(structure_list=["distribute_nine"])
     blueprint["first_comp"]["position"] = "NA"
     blueprint["first_comp"]["number"] = "NA"
@@ -318,6 +335,12 @@ def impose_constraints(blueprint, constraint_class=None):
             else:
                 blueprint[comp]["number"] = "progression_-1"
         
+        if "progression" in blueprint[comp]["type"]:
+            if int(blueprint[comp]["type"].split("_")[1]) > 0:
+                blueprint[comp]["type"] = "progression_1"
+            else:
+                blueprint[comp]["type"] = "progression_-1"
+        
         if "arithmetic" in blueprint[comp]["type"]:
             new_relation = random.choice(["constant", "progression", "consistent_union"])
             blueprint[comp]["type"] = new_relation
@@ -455,9 +478,18 @@ def eligible_values(structure, comp, attr, rel="", used_vals=None, human=False, 
         return [1]
     """
 
-    if "progression" in rel and "position" not in attr and attr != "angle":
+    if "progression" in rel and "position" not in attr and attr != "angle" and attr != "type":
         inc = int(rel.split("_")[1])
         max_final = max(range_of_values(attr, structure, comp, human, ruleset=ruleset))
+        min_final = min(range_of_values(attr, structure, comp, human, ruleset=ruleset))
+        max_initial = min(max_final - inc * 2, max_final)
+        min_initial = max(min_final - inc * 2, min_final)
+
+        return list(range(min_initial, max_initial + 1))
+    
+    elif "progression" in rel and "position" not in attr and attr == "type":
+        inc = int(rel.split("_")[1])
+        max_final = max(range_of_values(attr, structure, comp, human, ruleset=ruleset)) - 1 # can't have circles as the final thing
         min_final = min(range_of_values(attr, structure, comp, human, ruleset=ruleset))
         max_initial = min(max_final - inc * 2, max_final)
         min_initial = max(min_final - inc * 2, min_final)
