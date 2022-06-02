@@ -130,9 +130,7 @@ def construct_array(images, rows, cols, answers=False):
     cushion = int(tile_size/20)
     vert_cushion = int(tile_size/5) if answers else cushion
     
-    full_image = np.zeros((tile_size*rows + vert_cushion*rows + cushion, tile_size*cols + cushion*(cols + 1)))
-
-    gray_box = np.ones((cushion*4, cushion*4))*200
+    full_image = np.ones((tile_size*rows + vert_cushion*rows + cushion, tile_size*cols + cushion*(cols + 1)))*235
     
     for row in range(rows):
         for col in range(cols):
@@ -140,17 +138,21 @@ def construct_array(images, rows, cols, answers=False):
             
             if index < images.shape[0]:
                 img = images[index,:,:]
+            elif answers:
+                img = np.ones((tile_size, tile_size))*235
             else:
-                img = np.ones((tile_size, tile_size))*200
+                img = np.ones((tile_size, tile_size))*220
             
             place_at_coords(full_image, img, cushion, vert_cushion, row, col)
             
             
+            plt.imshow(full_image)
+            
             number = char_to_pixels(str(index + 1), "res/cour.ttf")
             
-            box = np.zeros((cushion*4, cushion*4))
+            box = np.zeros((cushion*3, cushion*3))
             box[box.shape[0] - number.shape[0]:, box.shape[1] - number.shape[1]:box.shape[1]] = number
-            box = np.where(box, 0, 200)
+            box = np.where(box, 255, 90)
             
             if answers and index != 8:
                 place_at_coords(full_image, box, cushion, vert_cushion, row, col, offset=True, grid_size=tile_size)
@@ -190,7 +192,7 @@ def place_at_coords(full_image, tile, cushion, vert_cushion, row_index, col_inde
     if grid_size is None:
         grid_size = tile_size
         
-    row_start_pixel = vert_cushion + row_index * (grid_size + vert_cushion) - offset * int(0.75 * tile_size)
+    row_start_pixel = vert_cushion + row_index * (grid_size + vert_cushion) - offset * int(tile_size)
     row_end_pixel = row_start_pixel + tile_size
     
     col_start_pixel = cushion + col_index * (grid_size + cushion)  
@@ -198,7 +200,7 @@ def place_at_coords(full_image, tile, cushion, vert_cushion, row_index, col_inde
     
     full_image[row_start_pixel:row_end_pixel, col_start_pixel:col_end_pixel] = tile
 
-def char_to_pixels(text, path='arialbd.ttf', fontsize=50):
+def char_to_pixels(text, path='arialbd.ttf', fontsize=35):
     """
     Based on https://stackoverflow.com/a/27753869/190597 (jsheperd)
     """
@@ -212,6 +214,7 @@ def char_to_pixels(text, path='arialbd.ttf', fontsize=50):
     arr = np.where(arr, 0, 1)
     arr = arr[(arr != 0).any(axis=1)]
     return arr
+
 
 if __name__ == "__main__":
     generate_sameness_set(level="all", count=10)
