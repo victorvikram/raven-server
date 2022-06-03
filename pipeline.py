@@ -145,9 +145,6 @@ def construct_array(images, rows, cols, answers=False):
             
             place_at_coords(full_image, img, cushion, vert_cushion, row, col)
             
-            
-            plt.imshow(full_image)
-            
             number = char_to_pixels(str(index + 1), "res/cour.ttf")
             
             box = np.zeros((cushion*3, cushion*3))
