@@ -329,6 +329,11 @@ def impose_constraints(blueprint, constraint_class=None):
             blueprint[comp]["color"] = "constant"
             blueprint[comp]["initials"]["color"] = 0
     
+        if "arithmetic" in blueprint[comp]["type"]:
+            new_relation = random.choice(["constant", "progression", "consistent_union"])
+            blueprint[comp]["type"] = new_relation
+            decorate_relations(blueprint)
+
         if structure in ["out_in_grid", "distribute_four"] and ("progression" in blueprint[comp]["number"]):
             if int(blueprint[comp]["number"].split("_")[1]) > 0:
                 blueprint[comp]["number"] = "progression_1"
@@ -340,12 +345,7 @@ def impose_constraints(blueprint, constraint_class=None):
                 blueprint[comp]["type"] = "progression_1"
             else:
                 blueprint[comp]["type"] = "progression_-1"
-        
-        if "arithmetic" in blueprint[comp]["type"]:
-            new_relation = random.choice(["constant", "progression", "consistent_union"])
-            blueprint[comp]["type"] = new_relation
-            decorate_relations(blueprint)
-        
+              
         if constraint_class == "constant":
             non_const_attrs = generate_attr_list(blueprint[comp], non_const_attrs=True)
             for attr in non_const_attrs:

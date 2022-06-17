@@ -7,6 +7,7 @@ import random
 import os
 import numpy as np
 import json
+import math
 
 
 import string
@@ -145,11 +146,16 @@ def construct_array(images, rows, cols, answers=False):
             
             place_at_coords(full_image, img, cushion, vert_cushion, row, col)
             
-            number = char_to_pixels(str(index + 1), "res/cour.ttf")
+            number = char_to_pixels(str(index + 1), "res/courbd.ttf")
             
             box = np.zeros((cushion*3, cushion*3))
-            box[box.shape[0] - number.shape[0]:, box.shape[1] - number.shape[1]:box.shape[1]] = number
-            box = np.where(box, 255, 90)
+            row_coord = math.ceil((box.shape[0] - number.shape[0])/2)
+            row_end_coord = row_coord + number.shape[0]
+            col_coord = math.ceil((box.shape[1] - number.shape[1])/2)
+            col_end_coord = col_coord + number.shape[1]
+
+            box[row_coord:row_end_coord, col_coord:col_end_coord] = number
+            box = np.where(box, 255, 0)
             
             if answers and index != 8:
                 place_at_coords(full_image, box, cushion, vert_cushion, row, col, offset=True, grid_size=tile_size)
@@ -197,7 +203,7 @@ def place_at_coords(full_image, tile, cushion, vert_cushion, row_index, col_inde
     
     full_image[row_start_pixel:row_end_pixel, col_start_pixel:col_end_pixel] = tile
 
-def char_to_pixels(text, path='arialbd.ttf', fontsize=35):
+def char_to_pixels(text, path='arialbd.ttf', fontsize=30):
     """
     Based on https://stackoverflow.com/a/27753869/190597 (jsheperd)
     """
