@@ -1,5 +1,5 @@
 # Raven editor
-The RAVEN editor has two parts: a flask server (raven-server) and a react front end (raven-app). The front end sends requests to the flask server specifying the criteria for generating the RAVEN problem. Then the server generates the problem. This guide will instruct you on how to install  
+The RAVEN editor has two parts: a flask server (raven-server) and a react front end (raven-app). The front end sends requests to the flask server specifying the criteria for generating the RAVEN problem. Then the server generates the problem. This guide will instruct you on how to install both.
 ## Installation
 1. Clone the RAVEN app from [here](https://github.com/victorvikram/raven-app): `git clone <url>`
 2. Clone the RAVEN server from [here](https://github.com/victorvikram/raven-server): `git clone <url>`
